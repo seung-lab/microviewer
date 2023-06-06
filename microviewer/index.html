@@ -39,6 +39,7 @@
         z-index: 10;
 
         image-rendering: crisp-edges;
+        transition: transform .4s ease,bottom .4s ease,left .4s ease;
       }
 
       img {
@@ -328,15 +329,30 @@
       });
 
       var AXES = ['z', 'y', 'x'];
+      var ZOOMED = false;
 
       $(document).on('keyup', function (evt) {
         if (evt.keyCode === 'A'.charCodeAt(0)) {
           rotate_axis(2);
         }
-        else if (evt.keyCode === 'D'.charCodeAt(0)
-          || evt.keyCode === ' '.charCodeAt(0)) {
-
+        else if (evt.keyCode === 'D'.charCodeAt(0)) {
           rotate_axis(1);
+        }
+        else if (evt.keyCode === ' '.charCodeAt(0)) {
+          if (ZOOMED) {
+            elems.channel.css('transform', '');
+          }
+          else {
+            let zfactor = 10 / MAGNIFICATION;
+            let dx = SLICE.x / SIZE.x - 0.5;
+            let dy = SLICE.y / SIZE.y - 0.5;
+
+            dx *= elems.channel.width() * zfactor;
+            dy *= elems.channel.height() * zfactor;
+
+            elems.channel.css('transform', `matrix(${zfactor},0,0,${zfactor},${-dx},${-dy})`);
+          }
+          ZOOMED = !ZOOMED;
         }
       });
 
@@ -394,6 +410,7 @@
           MAGNIFICATION = Math.max(MAGNIFICATION, 0.25);
           elems.channel.css("width", (channel.width * MAGNIFICATION) + "px");
           elems.channel.css("height", (channel.height * MAGNIFICATION) + "px");
+          elems.channel.css('transform', '');
           render();
         }
         else if (evt.keyCode === "2".charCodeAt(0)) {
@@ -401,6 +418,7 @@
           MAGNIFICATION = Math.min(MAGNIFICATION, 256);
           elems.channel.css("width", (channel.width * MAGNIFICATION) + "px");
           elems.channel.css("height", (channel.height * MAGNIFICATION) + "px");
+          elems.channel.css('transform', '');
           render();
         }
       });
@@ -585,7 +603,8 @@
       <p>CONTROLS</p>
       <ul>
         <li>W/S ,/. or scroll - advance selected images</li>
-        <li>A/D/space - switch slicing plane</li>
+        <li>A/D - switch slicing plane</li>
+        <li>Space - zoom in to point</li>
         <li class='segmentation'>L - recolor segmentation labels</li>
         <li>Left Click - freeze info about current pixel</li>
         <li class="hyperview">X - clear selected segments</li>
@@ -594,7 +613,7 @@
         <li>1/2 - zoom out/in</li>
       </ul>
 
-      <input class="segmentation" type="checkbox" id="show_hover" name="show_hover" checked="checked"/> <label for="show_hover">Highlight Hover?</label>
+      <input class="segmentation" type="checkbox" id="show_hover" name="show_hover" checked="checked"/> <label class="segmentation" for="show_hover">Highlight Hover?</label>
       <p class="segmentation">SELECTED SEGMENTS</p>
       <div class="segmentation" id="selected_segments"></div>
       <textarea id="addsegs" class="segmentation" type="text" placeholder="Input comma separated segids and press enter."></textarea>
