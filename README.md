@@ -1,3 +1,5 @@
+[![PyPI version](https://badge.fury.io/py/microviewer.svg)](https://badge.fury.io/py/microviewer)
+
 # microviewer
 Multiplatform 3D numpy image browser based viewer.
 
