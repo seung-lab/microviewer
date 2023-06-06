@@ -30,6 +30,12 @@ Visualize 3D numpy arrays in your browser without difficult installation procedu
 - boolean images
 - segmentation labels
 
+## Installation
+
+```bash
+pip install microviewer
+```
+
 ## History
 
 This microviewer package has been a part of CloudVolume since 2018, but is now broken out into its own package for more flexible wider use. Microviewer uses a modified version of https://github.com/seung-lab/data-cube-x/ (2016) to represent the array in Javascript.
