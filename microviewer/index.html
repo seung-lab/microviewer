@@ -331,6 +331,47 @@
       var AXES = ['z', 'y', 'x'];
       var ZOOMED = false;
 
+      function zoomTo () {
+          let x = 0;
+          let y = 0;
+          let sx = 0;
+          let sy = 0;
+          if (AXIS == 'z') {
+            x = SLICE.x;
+            y = SLICE.y;
+            sx = SIZE.x;
+            sy = SIZE.y;
+          }
+          else if (AXIS == 'y') {
+            x = SLICE.x;
+            y = SLICE.z;
+            sx = SIZE.x;
+            sy = SIZE.z;
+          }
+          else if (AXIS == 'x') {
+            x = SLICE.y;
+            y = SLICE.z;
+            sx = SIZE.y;
+            sy = SIZE.z;
+          }
+
+          if (ZOOMED) {
+            elems.channel.css('transform', '');
+          }
+          else {
+            let zfactor = 10 / MAGNIFICATION;
+            let dx = x / sx - 0.5;
+            let dy = y / sy - 0.5;
+
+            dx *= elems.channel.width() * zfactor;
+            dy *= elems.channel.height() * zfactor;
+
+            elems.channel.css('transform', `matrix(${zfactor},0,0,${zfactor},${-dx},${-dy})`);
+          }
+          ZOOMED = !ZOOMED;
+      }
+
+
       $(document).on('keyup', function (evt) {
         if (evt.keyCode === 'A'.charCodeAt(0)) {
           rotate_axis(2);
@@ -339,20 +380,7 @@
           rotate_axis(1);
         }
         else if (evt.keyCode === ' '.charCodeAt(0)) {
-          if (ZOOMED) {
-            elems.channel.css('transform', '');
-          }
-          else {
-            let zfactor = 10 / MAGNIFICATION;
-            let dx = SLICE.x / SIZE.x - 0.5;
-            let dy = SLICE.y / SIZE.y - 0.5;
-
-            dx *= elems.channel.width() * zfactor;
-            dy *= elems.channel.height() * zfactor;
-
-            elems.channel.css('transform', `matrix(${zfactor},0,0,${zfactor},${-dx},${-dy})`);
-          }
-          ZOOMED = !ZOOMED;
+          zoomTo();
         }
       });
 
