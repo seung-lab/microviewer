@@ -16,6 +16,8 @@ uview image.npy.gz # view as image
 uview labels.npy.gz --seg # view as segmentation
 ```
 
+![Segmentation display in microviewer](seg-demo.png "Segmentation display in microviewer.")
+
 Visualize 3D numpy arrays in your browser without difficult installation procedures or reformatting your data.  The code is CPU based and the image is uncompressed in memory. You're limited to images that are at most 2^31 bytes large (~2.1 GB) due to browser limitations.
 
 ## Supports
