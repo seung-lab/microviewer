@@ -33,8 +33,8 @@
       canvas {
         position: relative;
         border: 1px dotted white;
-        max-width: 768px;
-        max-height: 768px;
+        max-width: calc(100vw - 20px);
+        max-height: calc(100vh - 100px);
         background: #0d0d0d;
         z-index: 10;
 
@@ -226,6 +226,7 @@
           selected_segments: $('#selected_segments'),
           addsegs: $('#addsegs'),
           show_hover: $('#show_hover'),
+          magnification: $('#magnification'),
         };
         
         window.channel = elems.channel[0];
@@ -390,15 +391,17 @@
         }
         else if (evt.keyCode === "1".charCodeAt(0)) {
           MAGNIFICATION /= 2;
-          MAGNIFICATION = Math.max(MAGNIFICATION, 1);
+          MAGNIFICATION = Math.max(MAGNIFICATION, 0.25);
           elems.channel.css("width", (channel.width * MAGNIFICATION) + "px");
           elems.channel.css("height", (channel.height * MAGNIFICATION) + "px");
+          render();
         }
         else if (evt.keyCode === "2".charCodeAt(0)) {
           MAGNIFICATION *= 2;
           MAGNIFICATION = Math.min(MAGNIFICATION, 256);
           elems.channel.css("width", (channel.width * MAGNIFICATION) + "px");
           elems.channel.css("height", (channel.height * MAGNIFICATION) + "px");
+          render();
         }
       });
 
@@ -513,8 +516,10 @@
           elems.loading.hide();
         }
         else {
-          elems.loading.text( (vol.progress() * 100).toFixed(0) + '%' )  
+          elems.loading.text( (vol.progress() * 100).toFixed(0) + '%' );  
         }
+
+        elems.magnification.text(`${MAGNIFICATION}x`);
         
         if (PXVALUE.length) {
           elems.pxvalue.show().text( "value: " + PXVALUE.map(display_value).join("; ") );
@@ -573,7 +578,7 @@
       <br>
       <span id="cloudpath"></span> 
       <br> 
-      shape: <span id="shape"></span> bounds: (<span id="bounds"></span>)  <span id="dtype"></span> <span id="resolution"></span> nm<sup>3</sup> <span id="loading"></span>
+      shape: <span id="shape"></span> bounds: (<span id="bounds"></span>)  <span id="dtype"></span> <span id="resolution"></span> nm<sup>3</sup> <span id="magnification"></span> <span id="loading"></span>
     </div>
 
     <div id="instructions">
