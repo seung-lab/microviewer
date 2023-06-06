@@ -217,12 +217,13 @@ class SegmentationVolume extends MonoVolume {
     const brightener = this.colorToUint32({ r: 10, g: 10, b: 10, a: 0 });
 
     let segments = this.segments;
-    let show_all = Object.keys(segments).length === 0;
+    let show_all = true;
 
     let ArrayType = this.channel.arrayType();
     let segarray = new Uint8Array(this.renumbering.length);
     Object.keys(segments).forEach((label) => {
       segarray[label] = !!segments[label];
+      show_all &&= !segments[label];
     });
 
     // We sometimes disable the hover highlight to get more performance
