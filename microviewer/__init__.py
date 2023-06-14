@@ -95,7 +95,7 @@ def run(cutouts, hostname="localhost", port=DEFAULT_PORT, browser=True):
     myServer.serve_forever()
   except KeyboardInterrupt:
     # extra \n to prevent display of "^CContinuing"
-    print("\nContinuing program execution...")
+    print("")
   finally:
     myServer.server_close()
 
@@ -179,3 +179,8 @@ class ViewerServerHandler(BaseHTTPRequestHandler):
     filepath = os.path.join(dirname, './' + path)
     with open(filepath, 'rb') as f:
       self.wfile.write(f.read())  
+
+  # silent, no need to print that it's serving html and js
+  def log_message(self, format, *args):
+    pass
+
