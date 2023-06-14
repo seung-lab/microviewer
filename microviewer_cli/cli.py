@@ -8,6 +8,15 @@ import click
 import microviewer
 import numpy as np
 
+def root_file_ext(filename):
+  filename, ext = os.path.splitext(filename)
+
+  while True:
+    filename, ext2 = os.path.splitext(filename)
+    if ext2 == '':
+      return ext
+    ext = ext2
+
 def load_bytesio(filelike):
   if hasattr(filelike, 'read'):
     binary = filelike.read()
@@ -34,11 +43,23 @@ def load_bytesio(filelike):
 @click.option('--seg', is_flag=True, default=False, help="Display image as segmentation.", show_default=True)
 @click.option('--browser/--no-browser', default=True, is_flag=True, help="Open the dataset in the system's default web browser.", show_default=True)
 def main(image, seg, browser):
-	"""
-	View 3D images in the browser.
-	"""
-	image = np.load(load_bytesio(image))
-	microviewer.view(image, seg=seg, browser=browser)
+  """
+  View 3D images in the browser.
+  """
+  binary = load_bytesio(image)
+  ext = root_file_ext(image)
+
+  if ext == ".npy":
+    image = np.load(binary)
+  elif ext == ".nii":
+    import nibabel as nib
+    image = nib.load(image)
+    image = np.array(image.dataobj)
+  else:
+    print("Data type not supported.")
+    return
+
+  microviewer.view(image, seg=seg, browser=browser)
 
 
 
