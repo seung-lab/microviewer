@@ -29,6 +29,7 @@ Visualize 3D numpy arrays in your browser without difficult installation procedu
 - floating point images
 - boolean images
 - segmentation labels
+- .npy or .nii format (must install nibabel first)
 
 ## Installation
 
