@@ -63,17 +63,24 @@ def main(image, segmentation, seg, browser):
   View 3D images in the browser.
   """
   try:
-    image = load(image)
+    image_np = load(image)
     if segmentation:
-      segmentation = load(segmentation)
+      segmentation_np = load(segmentation)
   except ValueError:
     print("Data type not supported.")
     return
 
   if segmentation is not None:
-    microviewer.hyperview(image, segmentation, browser=browser)
+    microviewer.hyperview(
+      image_np, segmentation_np, 
+      browser=browser, 
+      cloudpath=[ image, segmentation ],
+    )
   else:
-    microviewer.view(image, seg=seg, browser=browser)
+    microviewer.view(
+      image_np, seg=seg, 
+      browser=browser, cloudpath=image
+    )
 
 
 

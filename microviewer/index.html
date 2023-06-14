@@ -481,10 +481,7 @@
           document.title = `MEMORY - ${hyper}μViewer`;
         }
         else if (firstlayer) {
-          let layername = firstlayer.split('/');
-          layername = layername[ layername.length - 2 ] + '/' + layername[ layername.length - 1 ];
-
-          document.title = `${layername} - ${hyper}μViewer`;
+          document.title = `${PARAMETERS.cloudpath.join(" ; ")} - ${hyper}μViewer`;
         }
 
         elems.channel.css('width', SIZE.x + 'px').css('height', SIZE.y + 'px');

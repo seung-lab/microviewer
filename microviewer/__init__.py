@@ -39,9 +39,14 @@ def hyperview(
 
   assert np.all(img.shape[:3] == seg.shape[:3])
 
+  if isinstance(cloudpath, list):
+    cloudpath_img, cloudpath_seg = cloudpath
+  else:
+    cloudpath_img, cloudpath_seg = cloudpath, cloudpath
+
   img_data = {
     "img": img,
-    "cloudpath": cloudpath,
+    "cloudpath": cloudpath_img,
     "resolution": resolution,
     "layer_type": 'image',
     "offset": offset,
@@ -49,7 +54,7 @@ def hyperview(
 
   seg_data = {
     "img": seg,
-    "cloudpath": cloudpath,
+    "cloudpath": cloudpath_seg,
     "resolution": resolution,
     "layer_type": 'segmentation',
     "offset": offset,
