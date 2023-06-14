@@ -43,7 +43,7 @@ def hyperview(
     "img": img,
     "cloudpath": cloudpath,
     "resolution": resolution,
-    "layer_type": ('segmentation' if seg else 'image'),
+    "layer_type": 'image',
     "offset": offset,
   }
 
@@ -51,11 +51,11 @@ def hyperview(
     "img": seg,
     "cloudpath": cloudpath,
     "resolution": resolution,
-    "layer_type": ('segmentation' if seg else 'image'),
+    "layer_type": 'segmentation',
     "offset": offset,
   }
 
-  return run([ img, seg ], hostname=hostname, port=port, browser=browser)
+  return run([ img_data, seg_data ], hostname=hostname, port=port, browser=browser)
 
 def view(
   img:np.ndarray, 
@@ -94,7 +94,6 @@ def run(cutouts, hostname="localhost", port=DEFAULT_PORT, browser=True):
   try:
     myServer.serve_forever()
   except KeyboardInterrupt:
-    # extra \n to prevent display of "^CContinuing"
     print("")
   finally:
     myServer.server_close()
@@ -158,10 +157,10 @@ class ViewerServerHandler(BaseHTTPRequestHandler):
         'cloudpath': [ img['cloudpath'], seg['cloudpath'] ],
         'bounds': bounds,
         'resolution': [ int(x) for x in cutout['resolution'] ],
-        'data_types': [ str(img.dtype), str(seg.dtype) ],
+        'data_types': [ str(img["img"].dtype), str(seg["img"].dtype) ],
         'data_bytes': [ 
-          np.dtype(img.dtype).itemsize,
-          np.dtype(seg.dtype).itemsize
+          np.dtype(img["img"].dtype).itemsize,
+          np.dtype(seg["img"].dtype).itemsize
         ],
       })
     self.wfile.write(msg.encode('utf-8'))
