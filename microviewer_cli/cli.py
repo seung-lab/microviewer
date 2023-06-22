@@ -21,12 +21,14 @@ class Tuple234(click.ParamType):
         self.fail(f"'{value}' does not contain a comma delimited list of 3 or 4 integers.")
     return value
 
-def root_file_ext(filename):
+def normalize_file_ext(filename):
   filename, ext = os.path.splitext(filename)
 
   while True:
     filename, ext2 = os.path.splitext(filename)
-    if ext2 == '':
+    if ext2 in ('.ckl', '.cpso'):
+      return ext2
+    elif ext2 == '':
       return ext
     ext = ext2
 
@@ -72,16 +74,22 @@ def load_numpy(src, shape, dtype, order):
 
 def load(filename, shape, dtype, order):
   binary = load_bytesio(filename)
-  ext = root_file_ext(filename)
+  ext = normalize_file_ext(filename)
 
-  if ext == ".npy":
+  if ext == ".cpso":
+    import compresso
+    image = compresso.decompress(binary.read())
+  elif ext == ".ckl":
+    import crackle
+    image = crackle.decompress(binary.read())
+  elif ext == ".npy":
     image = load_numpy(filename, shape, dtype, order)
   elif ext == ".nii":
     import nibabel as nib
     image = nib.load(filename)
     image = np.array(image.dataobj)
   else:
-    raise ValueError("Data type not supported.")
+    raise ValueError("Data type not supported: " + ext)
 
   return image
 
