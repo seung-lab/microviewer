@@ -231,6 +231,7 @@
           selected_segments: $('#selected_segments'),
           addsegs: $('#addsegs'),
           show_hover: $('#show_hover'),
+          show_unselected: $('#show_unselected'),
           magnification: $('#magnification'),
         };
         
@@ -437,6 +438,14 @@
             !elems.show_hover.prop("checked")
           );
         }
+        else if (evt.keyCode === "U".charCodeAt(0)
+            || evt.keyCode === "u".charCodeAt(0)) {
+
+          elems.show_unselected.prop("checked", 
+            !elems.show_unselected.prop("checked")
+          );
+          render(true);
+        }
         else if (evt.keyCode === "1".charCodeAt(0)) {
           MAGNIFICATION /= 2;
           MAGNIFICATION = Math.max(MAGNIFICATION, 0.25);
@@ -453,6 +462,10 @@
           elems.channel.css('transform', '');
           render();
         }
+
+        elems.show_unselected.on('click', function () {
+          render(true);
+        });
       });
 
       function rotate_axis(delta) {
@@ -544,6 +557,7 @@
           channel.height = SIZE.z; 
         }
 
+        vol.show_unselected = elems.show_unselected.prop('checked');
         vol.render(window.channelctx, AXIS, SLICE[AXIS]);
 
         // compute real coordinate as well
@@ -639,10 +653,12 @@
         <li class="segmentation">X - clear selected segments</li>
         <li class="hyperview">+/- increase, decrease opacity</li>
         <li class='segmentation'>H - toggle hover highlight</li>
+        <li class='segmentation'>U - toggle show unselected</li>
         <li>1/2 - zoom out/in</li>
       </ul>
 
       <input class="segmentation" type="checkbox" id="show_hover" name="show_hover" checked="checked"/> <label class="segmentation" for="show_hover">Highlight Hover?</label>
+      <input class="segmentation" type="checkbox" id="show_unselected" name="show_unselected" /> <label class="segmentation" for="show_unselected">Show Unselected?</label>
       <p class="segmentation">SELECTED SEGMENTS</p>
       <div class="segmentation" id="selected_segments"></div>
       <textarea id="addsegs" class="segmentation" type="text" placeholder="Input comma separated segids and press enter."></textarea>

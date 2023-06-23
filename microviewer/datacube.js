@@ -164,6 +164,7 @@ class SegmentationVolume extends MonoVolume {
     this.renumbering = new datacube.cube.constructor(1);
     this.has_segmentation = true;
     this.hover_id = null;
+    this.show_unselected = false;
   }
 
   selected () {
@@ -216,9 +217,11 @@ class SegmentationVolume extends MonoVolume {
 
     const color_assignments = this.assigned_colors;
     const brightener = this.colorToUint32({ r: 10, g: 10, b: 10, a: 0 });
+    const white = this.colorToUint32({ r: 200, g: 200, b: 200 }, 1);
 
     let segments = this.segments;
     let show_all = true;
+    const show_unselected = this.show_unselected;
 
     let ArrayType = this.channel.arrayType();
     let segarray = new Uint8Array(this.renumbering.length);
@@ -229,11 +232,26 @@ class SegmentationVolume extends MonoVolume {
 
     // We sometimes disable the hover highlight to get more performance
     if (hover_enabled) { 
-      for (let i = pixels32.length - 1; i >= 0; i--) {
-        if (seg_slice[i]) {
-          if (show_all | segarray[seg_slice[i]] | seg_slice[i] === hover_id) {
-            pixels32[i] = color_assignments[seg_slice[i]];
+      if (show_unselected) {
+        for (let i = pixels32.length - 1; i >= 0; i--) {
+          if (seg_slice[i]) {
+            if (segarray[seg_slice[i]]) {
+              pixels32[i] = white;
+            }
+            else {
+              pixels32[i] = color_assignments[seg_slice[i]];
+            }
             pixels32[i] += (seg_slice[i] === hover_id) * brightener;
+          }
+        }
+      }
+      else {
+        for (let i = pixels32.length - 1; i >= 0; i--) {
+          if (seg_slice[i]) {
+            if (show_all | segarray[seg_slice[i]] | seg_slice[i] === hover_id) {
+              pixels32[i] = color_assignments[seg_slice[i]];
+              pixels32[i] += (seg_slice[i] === hover_id) * brightener;
+            }
           }
         }
       }
