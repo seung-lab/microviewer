@@ -163,6 +163,7 @@ class SegmentationVolume extends MonoVolume {
     this.segments = {};
     this.renumbering = new datacube.cube.constructor(1);
     this.has_segmentation = true;
+    this.hover_id = null;
   }
 
   selected () {
