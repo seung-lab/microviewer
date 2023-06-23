@@ -126,7 +126,10 @@ class ViewerServerHandler(BaseHTTPRequestHandler):
     self.send_header('Content-type', 'application/octet-stream')
     self.send_header('Content-length', str(data.nbytes))
     self.end_headers()
-    self.wfile.write(data.tobytes('F'))
+    try:
+      self.wfile.write(data.tobytes('F'))
+    except BrokenPipeError: # happens when client closes window too fast
+      pass
 
   def serve_parameters(self):
     self.send_header('Content-type', 'application/json')
@@ -181,8 +184,11 @@ class ViewerServerHandler(BaseHTTPRequestHandler):
 
     dirname = os.path.dirname(__file__)
     filepath = os.path.join(dirname, './' + path)
-    with open(filepath, 'rb') as f:
-      self.wfile.write(f.read())  
+    try:
+      with open(filepath, 'rb') as f:
+        self.wfile.write(f.read())  
+    except BrokenPipeError: # happens when client closes window too fast
+      pass
 
   # silent, no need to print that it's serving html and js
   def log_message(self, format, *args):
