@@ -52,6 +52,16 @@
         height: 10px;
       }
 
+      #brush-size div:nth-child(2) {
+        width: 17px;
+        height: 17px;
+      }
+
+      #brush-size div:nth-child(3) {
+        width: 24px;
+        height: 24px;
+      }
+
       #brush-size div:last-child {
         width: 30px;
         height: 30px;
@@ -59,7 +69,8 @@
 
       #brush-size.exact div:first-child,  
       #brush-size.small div:nth-child(2),
-      #brush-size.large div:last-child
+      #brush-size.medium div:nth-child(3),
+      #brush-size.large div:nth-child(4)
       {
         background-color: #80d0b2;
       }
@@ -143,18 +154,6 @@
         width: 450px;
       }
 
-      canvas {
-        position: relative;
-        border: 1px dotted white;
-        max-width: calc(100vw - 20px);
-        max-height: calc(100vh - 100px);
-        background: #0d0d0d;
-        z-index: 10;
-
-        image-rendering: crisp-edges;
-        transition: transform .4s ease,bottom .4s ease,left .4s ease;
-      }
-
       img {
         margin: 1px;
       }
@@ -172,6 +171,51 @@
         background-color: #4a4a4a;
         padding: 1em;
         width: 400px;
+      }
+
+      canvas {
+        position: relative;
+        border: 1px dotted white;
+        max-width: calc(100vw - 20px);
+        max-height: calc(100vh - 100px);
+        background: #0d0d0d;
+        z-index: 10;
+
+        image-rendering: crisp-edges;
+        transition: transform .4s ease,bottom .4s ease,left .4s ease;
+        cursor: url("./cursors/exact.png") 20 20.5, crosshair;
+      }
+
+      canvas.exact {
+        cursor: url("./cursors/exact.png") 20 20.5, crosshair;
+      }
+
+      canvas.exact:active {
+        cursor: url("./cursors/exact-active.png") 20 20.5, crosshair; /* F7EDCE, color of active state */
+      }
+
+      canvas.small {
+        cursor: url("./cursors/small.png") 16 16, crosshair
+      }
+
+      canvas.small:active {
+        cursor: url("./cursors/small-active.png") 16 16, crosshair
+      }
+
+      canvas.medium {
+        cursor: url("./cursors/medium.png") 28.5 28.5, crosshair
+      }
+
+      canvas.medium:active {
+        cursor: url("./cursors/medium-active.png") 28.5 28.5, crosshair
+      }
+
+      canvas.large {
+        cursor: url("./cursors/large.png") 53.5 53.5, crosshair
+      }
+
+      canvas.large:active {
+        cursor: url("./cursors/large-active.png") 53.5 53.5, crosshair
       }
     </style>
 
@@ -277,9 +321,10 @@
               vol.toggleSegment(AXIS, SLICE[AXIS], x, y);  
             }
             else {
-              let diameter = BRUSH_DIAMETERS[BRUSH] / MAGNIFICATION / vol.channel.size.x;
+              let mag = ZOOMED ? 10 : MAGNIFICATION;
+              let diameter = BRUSH_DIAMETERS[BRUSH] / mag / Math.max(vol.channel.size.x, vol.channel.size.y);
               diameter *= channel.width / $(channel).width();
-              
+
               vol.selectSegsInCircle(AXIS, SLICE[AXIS], diameter, x, y);
             }
 
@@ -544,7 +589,7 @@
           render(true);
         }
         else if (evt.keyCode === 'E'.charCodeAt(0)) {
-          BRUSH = Math.min(BRUSH + 1, 2);
+          BRUSH = Math.min(BRUSH + 1, 3);
           render(true);
         }
       });
@@ -640,7 +685,7 @@
           BRUSH = 1;
           render(true);
         });
-        $("#brush-size div.large").on("click", function () {
+        $("#brush-size div.medium").on("click", function () {
           BRUSH = 2;
           render(true);
         });
@@ -789,13 +834,20 @@
         }
 
         if (BRUSH === 0) {
-          elems.brushsize.removeClass("small large").addClass("exact");
+          $(channel).removeClass("small medium large").addClass("exact");
+          elems.brushsize.removeClass("small medium large").addClass("exact");
         }
-        else if (BRUSH == 1) {
-          elems.brushsize.removeClass("exact large").addClass("small"); 
+        else if (BRUSH === 1) {
+          $(channel).removeClass("exact medium large").addClass("small");
+          elems.brushsize.removeClass("exact medium large").addClass("small");
+        }
+        else if (BRUSH === 2) {
+          $(channel).removeClass("exact small large").addClass("medium");
+          elems.brushsize.removeClass("exact small large").addClass("medium");
         }
         else {
-          elems.brushsize.removeClass("exact small").addClass("large"); 
+          $(channel).removeClass("exact medium small").addClass("large"); 
+          elems.brushsize.removeClass("exact medium small").addClass("large"); 
         }
 
         _needsrender = false;
@@ -859,8 +911,9 @@
 
         <p>BRUSH SIZE</p>
         <div id="brush-size">
-          <div class="exact selected"></div>
+          <div class="exact"></div>
           <div class="small"></div>
+          <div class="medium"></div>
           <div class="large"></div>
         </div>
 
@@ -886,7 +939,7 @@
       </div>
     </div>
 
-    <canvas id="channel" width="256" height="256"></canvas>
+    <canvas id="channel" class="exact" width="256" height="256"></canvas>
 
   </body>
 </html>
