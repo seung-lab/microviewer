@@ -186,6 +186,13 @@
       var MAGNIFICATION = 1;
       var BRUSH = 0;
 
+      let BRUSH_DIAMETERS = {
+        0: 1, // px
+        1: 25,
+        2: 50,
+        3: 100,
+      };
+
       var elems; 
       var _needsrender = true;
 
@@ -266,7 +273,16 @@
             x = clamp(x, 0, 1);
             y = clamp(y, 0, 1);  
 
-            vol.toggleSegment(AXIS, SLICE[AXIS], x, y);  
+            if (BRUSH == 0) {
+              vol.toggleSegment(AXIS, SLICE[AXIS], x, y);  
+            }
+            else {
+              let diameter = BRUSH_DIAMETERS[BRUSH] / MAGNIFICATION / vol.channel.size.x;
+              diameter *= channel.width / $(channel).width();
+              
+              vol.selectSegsInCircle(AXIS, SLICE[AXIS], diameter, x, y);
+            }
+
             render(true);
           });
         }

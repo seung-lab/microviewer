@@ -392,6 +392,22 @@ class SegmentationVolume extends MonoVolume {
 
     return Object.keys(segids).map( (segid) => parseInt(segid, 10) );
   }
+
+  selectSegsInCircle(axis, slice, d, cx, cy) {
+    let _this = this;
+    let segs = _this.getSegsInCircle(axis, slice, d, cx, cy);
+    segs.forEach((segid) => {
+      _this.segments[segid] = true;
+    });
+  }
+
+  eraseSegsInCircle(axis, slice, d, cx, cy) {
+    let _this = this;
+    let segs = _this.getSegsInCircle(axis, slice, d, cx, cy);
+    segs.forEach((segid) => {
+      _this.segments[segid] = false;
+    });
+  }
 }
 
 /* HyperVolume
