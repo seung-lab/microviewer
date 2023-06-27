@@ -333,6 +333,65 @@ class SegmentationVolume extends MonoVolume {
       _this.segments[segid] = true;
     }
   }
+
+  /* getSegsInCircle
+   *
+   * Get the segids located within a circle. All
+   * parameters are normalized between [0, 1]
+   *
+   * Required:
+   *   d: 0..1, Diameter of the circle
+   *   cx: 0..1, X coordinate of circle center
+   *   cy: 0..1, Y coordinate of circle center
+   *
+   * Return: [ segids ]
+   */
+  getSegsInCircle (axis, slice, d, cx, cy) {
+    let _this = this;
+    let [ width, height ] = _this.channel.faceDimensions(axis);
+
+    // Nullify anything outside the ellipse. Just like a GRE problem.
+
+    let buffer = _this.channel.slice(axis, slice, /*copy=*/false);
+
+    cx = Math.round(cx * width) + 0.5;
+    cy = Math.round(cy * height) + 0.5;
+
+    let dx = d * width,
+      dy = d * height;
+
+    let rx = dx / 2,
+      rx2 = dx * dx / 4,
+      ry = dy / 2,
+      ry2 = dy * dy / 4;
+
+    let x0 = Math.max(0, Math.trunc(cx - rx) + 0.5),
+      xf = Math.min(width, Math.trunc(cx + rx) + 0.5),
+      y0 = Math.max(0, Math.trunc(cy - ry) + 0.5),
+      yf = Math.min(width, Math.trunc(cy + ry) + 0.5);
+
+    let segid = 0,
+      bounds_test = 0.0;
+
+    let segids = {};
+
+    // For anisotropic data, we need to distort our circle (UI) into an ellipse 
+    // since we've distorted the data to be square.
+    // eqn of an ellipse: ((x - h)^2 / rx^2) + ((y - k)^2 / ry^2) <= 1
+    // We'll use < instead of <= though to exclude the boundary
+
+    for (var x = x0; x <= xf; x++) {
+      for (var y = y0; y <= yf; y++) {
+        bounds_test = ((x - cx) * (x - cx) / rx2) + ((y - cy) * (y - cy) / ry2);
+        segid = ((bounds_test < 1) && buffer[(x|0) + width * (y|0)]) | 0;
+        segids[segid] = true;
+      }
+    }
+
+    delete segids[0];
+
+    return Object.keys(segids).map( (segid) => parseInt(segid, 10) );
+  }
 }
 
 /* HyperVolume
