@@ -44,7 +44,7 @@
       }
 
       #brush-size div:hover {
-        background-color: red;
+        background-color: #add9c8;
       }
 
       #brush-size div:first-child {
@@ -57,7 +57,10 @@
         height: 30px;
       }
 
-      #brush-size div.selected {
+      #brush-size.exact div:first-child,  
+      #brush-size.small div:nth-child(2),
+      #brush-size.large div:last-child
+      {
         background-color: #80d0b2;
       }
 
@@ -181,6 +184,7 @@
       var PXVALUE = [];
       var MOUSE_OVER_IMAGE = false;
       var MAGNIFICATION = 1;
+      var BRUSH = 0;
 
       var elems; 
       var _needsrender = true;
@@ -353,6 +357,7 @@
           showsidebar: $('#show-sidebar'),
           rtsidebar: $('#right-sidebar'),
           copysegs: $("#copy-segs"),
+          brushsize: $("#brush-size"),
         };
         
         window.channel = elems.channel[0];
@@ -508,7 +513,6 @@
           ZOOMED = !ZOOMED;
       }
 
-
       $(document).on('keyup', function (evt) {
         if (evt.keyCode === 'A'.charCodeAt(0)) {
           rotate_axis(2);
@@ -518,6 +522,14 @@
         }
         else if (evt.keyCode === ' '.charCodeAt(0)) {
           zoomTo();
+        }
+        else if (evt.keyCode === 'Q'.charCodeAt(0)) {
+          BRUSH = Math.max(BRUSH - 1, 0);
+          render(true);
+        }
+        else if (evt.keyCode === 'E'.charCodeAt(0)) {
+          BRUSH = Math.min(BRUSH + 1, 2);
+          render(true);
         }
       });
 
@@ -603,6 +615,20 @@
         elems.show_unselected.on('click', function () {
           render(true);
         });
+
+        $("#brush-size div.exact").on("click", function () {
+          BRUSH = 0;
+          render(true);
+        });
+        $("#brush-size div.small").on("click", function () {
+          BRUSH = 1;
+          render(true);
+        });
+        $("#brush-size div.large").on("click", function () {
+          BRUSH = 2;
+          render(true);
+        });
+
       });
 
       function rotate_axis(delta) {
@@ -746,6 +772,16 @@
           );
         }
 
+        if (BRUSH === 0) {
+          elems.brushsize.removeClass("small large").addClass("exact");
+        }
+        else if (BRUSH == 1) {
+          elems.brushsize.removeClass("exact large").addClass("small"); 
+        }
+        else {
+          elems.brushsize.removeClass("exact small").addClass("large"); 
+        }
+
         _needsrender = false;
       }
 
@@ -782,12 +818,12 @@
       Last Click: <span id="clickcoord"></span> <span id="clickrealcoord"></span> <span id="clickpxvalue"></span>  <span id="magnification"></span> <span id="loading"></span>
     </div>
 
-    <div id="show-sidebar">
+    <div id="show-sidebar" class="hidden">
       <hr />
       <hr />
       <hr />
     </div>
-    <div id="right-sidebar">
+    <div id="right-sidebar" class="hidden">
       <div id="instructions">
         <div id="basic-info">
           <span id="cloudpath"></span> 
@@ -801,7 +837,7 @@
           resolution: <span id="resolution"></span> nm<sup>3</sup>
         </div>
 
-        <p>TOOLS</p>
+        <p>SELECTION VISIBILITY</p>
         <input class="segmentation" type="checkbox" id="show_hover" name="show_hover" checked="checked"/> <label class="segmentation" for="show_hover">Highlight Hover?</label>
         <input class="segmentation" type="checkbox" id="show_unselected" name="show_unselected" /> <label class="segmentation" for="show_unselected">Show Unselected?</label>
 
