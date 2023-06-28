@@ -126,6 +126,10 @@
         background-color: white;
       }
 
+      #show-sidebar:active {
+        background-color: #ccc;
+      }
+
       #show-sidebar hr {
         width: 25px;
         height: 1px;
@@ -183,38 +187,38 @@
 
         image-rendering: crisp-edges;
         transition: transform .4s ease,bottom .4s ease,left .4s ease;
+        cursor: crosshair;
+      }
+
+      canvas.paintable.exact {
         cursor: url("./cursors/exact.png") 20 20.5, crosshair;
       }
 
-      canvas.exact {
-        cursor: url("./cursors/exact.png") 20 20.5, crosshair;
-      }
-
-      canvas.exact:active {
+      canvas.paintable.exact:active {
         cursor: url("./cursors/exact-active.png") 20 20.5, crosshair; /* F7EDCE, color of active state */
       }
 
-      canvas.small {
+      canvas.paintable.small {
         cursor: url("./cursors/small.png") 16 16, crosshair
       }
 
-      canvas.small:active {
+      canvas.paintable.small:active {
         cursor: url("./cursors/small-active.png") 16 16, crosshair
       }
 
-      canvas.medium {
+      canvas.paintable.medium {
         cursor: url("./cursors/medium.png") 28.5 28.5, crosshair
       }
 
-      canvas.medium:active {
+      canvas.paintable.medium:active {
         cursor: url("./cursors/medium-active.png") 28.5 28.5, crosshair
       }
 
-      canvas.large {
+      canvas.paintable.large {
         cursor: url("./cursors/large.png") 53.5 53.5, crosshair
       }
 
-      canvas.large:active {
+      canvas.paintable.large:active {
         cursor: url("./cursors/large-active.png") 53.5 53.5, crosshair
       }
     </style>
@@ -689,6 +693,10 @@
           BRUSH = 2;
           render(true);
         });
+        $("#brush-size div.large").on("click", function () {
+          BRUSH = 3;
+          render(true);
+        });
 
       });
 
@@ -710,6 +718,9 @@
 
           if (PARAMETERS.layer_type === 'image') {
             $('#instructions .segmentation').hide();
+          }
+          else {
+            $(channel).addClass("paintable");
           }
 
           PARAMETERS.cloudpath[0].split('/')
@@ -881,9 +892,9 @@
   </head>
   <body>
     <div id="infobar">
-      <span id="axis"></span> <span id="coord"></span> <span id="realcoord"></span> <span id="pxvalue"></span> 
+      <span id="axis"></span> <span id="magnification"></span> <span id="coord"></span> <span id="realcoord"></span> <span id="pxvalue"></span> 
       <br> 
-      Last Click: <span id="clickcoord"></span> <span id="clickrealcoord"></span> <span id="clickpxvalue"></span>  <span id="magnification"></span> <span id="loading"></span>
+      Last Click: <span id="clickcoord"></span> <span id="clickrealcoord"></span> <span id="clickpxvalue"></span>  <span id="loading"></span>
     </div>
 
     <div id="show-sidebar" class="hidden">
@@ -905,12 +916,12 @@
           resolution: <span id="resolution"></span> nm<sup>3</sup>
         </div>
 
-        <p>SELECTION VISIBILITY</p>
+        <p class="segmentation">SELECTION VISIBILITY</p>
         <input class="segmentation" type="checkbox" id="show_hover" name="show_hover" checked="checked"/> <label class="segmentation" for="show_hover">Highlight Hover?</label>
         <input class="segmentation" type="checkbox" id="show_unselected" name="show_unselected" /> <label class="segmentation" for="show_unselected">Show Unselected?</label>
 
-        <p>BRUSH SIZE</p>
-        <div id="brush-size">
+        <p class="segmentation">BRUSH SIZE</p>
+        <div class="segmentation" id="brush-size">
           <div class="exact"></div>
           <div class="small"></div>
           <div class="medium"></div>
@@ -934,7 +945,7 @@
           <li class='segmentation'>U - toggle show unselected</li>
           <li>1/2 - zoom out/in</li>
           <li>M - show/hide menu</li>
-          <li>Q/E - decrease/increase brush size</li>
+          <li class="segmentation">Q/E - decrease/increase brush size</li>
         </ul>
       </div>
     </div>
