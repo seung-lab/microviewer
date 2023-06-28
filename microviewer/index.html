@@ -318,17 +318,15 @@
             var x = evt.offsetX / $(this).innerWidth(), 
               y = evt.offsetY / $(this).innerHeight();
 
-            x = clamp(x, 0, 1);
-            y = clamp(y, 0, 1);  
+            x = clamp(x, 0, 0.999999999);
+            y = clamp(y, 0, 0.999999999); 
 
             if (BRUSH == 0) {
               vol.toggleSegment(AXIS, SLICE[AXIS], x, y);  
             }
             else {
-              let mag = ZOOMED ? 10 : MAGNIFICATION;
-              let diameter = BRUSH_DIAMETERS[BRUSH] / mag / Math.max(vol.channel.size.x, vol.channel.size.y);
-              diameter *= channel.width / $(channel).width();
-
+              let diameter = BRUSH_DIAMETERS[BRUSH];
+              diameter /= $(channel).width();
               vol.selectSegsInCircle(AXIS, SLICE[AXIS], diameter, x, y);
             }
 

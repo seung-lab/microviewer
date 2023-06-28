@@ -354,8 +354,8 @@ class SegmentationVolume extends MonoVolume {
 
     let buffer = _this.channel.slice(axis, slice, /*copy=*/false);
 
-    cx = Math.round(cx * width) + 0.5;
-    cy = Math.round(cy * height) + 0.5;
+    cx = Math.floor(cx * width) + 0.5;
+    cy = Math.floor(cy * height) + 0.5;
 
     let dx = d * width,
       dy = d * height;
