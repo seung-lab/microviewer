@@ -29,13 +29,17 @@ Visualize 3D numpy arrays in your browser without difficult installation procedu
 - floating point images
 - boolean images
 - segmentation labels
-- .npy or .nii format (must install nibabel first)
+- .npy, .ckl, or .nii format
+
+For .ckl and .nii formats, you must separately install crackle-codec and nibabel respectively.
 
 ## Installation
 
 ```bash
-pip install microviewer
+pip install "microviewer[all_formats]"
 ```
+
+all_formats will install all supported formats for the CLI. By default, only .npy filesare supported.
 
 ## History
 
