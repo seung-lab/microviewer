@@ -64,7 +64,11 @@ def load_numpy(src, shape, dtype, order):
   try:
     with open(src, "rb") as f:
       shape, forder, dtype = read_numpy_array_header(f)
-      order = "F" if forder else "C"
+    return np.lib.format.open_memmap(
+      src, 
+      dtype=dtype, shape=shape, 
+      fortran_order=forder, mode="r"
+    )
   except ValueError:
     if dtype is None or shape is None or order not in ("C", "F"):
       raise
