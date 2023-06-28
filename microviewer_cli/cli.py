@@ -118,8 +118,11 @@ def main(image, segmentation, seg, browser, shape, dtype, order):
     image_np = load(image, shape, dtype, order)
     if segmentation:
       segmentation_np = load(segmentation, shape, dtype, order)
-  except ValueError:
-    print("Data type not supported.")
+  except ValueError as err:
+    print("Data type not supported.", err)
+    return
+  except FileNotFoundError as err:
+    print(f"File not found: {err.filename}")
     return
 
   if segmentation is not None:
