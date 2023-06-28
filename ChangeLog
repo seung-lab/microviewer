@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+1.2.0
+-----
+
+* chore: update ChangeLog, AUTHORS
+* chore: upload cursor files
+* docs: update history to mention eyewire
+* docs+install: describe how to get all formats
+* install: ensure cursor images are included
 * docs: update screenshot
 * feat: describe how to use the erase feature
 * feat: add paint and erase functions

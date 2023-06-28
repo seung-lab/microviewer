@@ -24,9 +24,14 @@ class Tuple234(click.ParamType):
 def normalize_file_ext(filename):
   filename, ext = os.path.splitext(filename)
 
+  two_pass = ('.ckl', '.cpso')
+
+  if ext in two_pass:
+    return ext
+
   while True:
     filename, ext2 = os.path.splitext(filename)
-    if ext2 in ('.ckl', '.cpso'):
+    if ext2 in two_pass:
       return ext2
     elif ext2 == '':
       return ext
