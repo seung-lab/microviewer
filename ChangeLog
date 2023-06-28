@@ -1,0 +1,53 @@
+CHANGES
+=======
+
+* docs: update screenshot
+* feat: describe how to use the erase feature
+* feat: add paint and erase functions
+* fix: brush working more accurately
+* improvements to brushes, move magnification indicator, open numpy files
+* feat: brush cursor icons
+* feat: large brushes
+* feat: brush switching logic
+* redesign: moving lots of info to a sidebar
+* feat: visualize all segments and color the selected ones white
+* fix: show that hover\_id is a class member in constructor
+* fix: suppress broken pipe error from client closing window too fast
+* fix: move instructions higher on the page
+* feat: restrict size of selected segments box
+* feat: decode crackle and compresso volumes
+* feat: support loading memmaps
+
+1.1.1
+-----
+
+* fix: better filenames in title
+
+1.1.0
+-----
+
+* docs: note that nii is supported
+* fix: hyperview working, supported in CLI
+* feat: support NIFTI images if nibabel is installed
+* feat: silence logging
+
+1.0.1
+-----
+
+* fix: add CLI to package
+* fix: show all when all segs are deselected
+* fix: "X" command tip should show for segmentation
+* docs: how to install
+* docs: add PyPI badge
+* docs: show what it looks like
+
+1.0.0
+-----
+
+* chore: remove testing file
+* fix: make zoomto work on y and x axes as well
+* feat: spacebar zooms in
+* feat: add mag indicator and let image go to almost full screen
+* docs: how to use microviewer
+* feat: microviewer working + cli
+* Initial commit
