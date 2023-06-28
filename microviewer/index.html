@@ -21,13 +21,160 @@
         margin-bottom: 10px;
       }
 
-      #instructions {
+      #brush-size {
+        height: 35px;
+        
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-around;
+        width: 150px;
+
+        border: 1px solid #4a4a4a;
+        padding: 10px;
+      }
+
+      #brush-size div {
+        border-radius: 50%;
+        background-color: white;
+        width: 20px;
+        height: 20px;
+        transition: background-color .4s ease;
+        cursor: pointer;
+      }
+
+      #brush-size div:hover {
+        background-color: #add9c8;
+      }
+
+      #brush-size div:first-child {
+        width: 10px;
+        height: 10px;
+      }
+
+      #brush-size div:nth-child(2) {
+        width: 17px;
+        height: 17px;
+      }
+
+      #brush-size div:nth-child(3) {
+        width: 24px;
+        height: 24px;
+      }
+
+      #brush-size div:last-child {
+        width: 30px;
+        height: 30px;
+      }
+
+      #brush-size.exact div:first-child,  
+      #brush-size.small div:nth-child(2),
+      #brush-size.medium div:nth-child(3),
+      #brush-size.large div:nth-child(4)
+      {
+        background-color: #80d0b2;
+      }
+
+      #right-sidebar {
         position: fixed;
-        top: 5px;
-        right: 20px;
+        top: 0px;
+        right: 0px;
+        z-index: 20;
+
+        background-color: #1a1a1a;
+        height: 100vh;
+        width: 500px;
+        padding-left: 20px;
+
+        transition: right .4s ease;
+
+        border-left: 1px solid #4a4a4a;
+        box-sizing: border-box;
+        overflow-y: auto;
+      }
+
+      #right-sidebar.hidden {
+        right: -500px;
+      }
+
+      #show-sidebar {
+        position: fixed;
+        top: 10px;
+        right: 510px;
+
+        background-color: #eee;
+        z-index: 30;
+
+        width: 60px;
+        height: 60px;
+
+        display: flex;
+        justify-content: center;
+        box-sizing: border-box;
+        flex-direction: column;
+        border-radius: 50%;
+
+        cursor: pointer;
+        transition: right .4s ease;
+      }
+
+      #show-sidebar.hidden {
+        right:15px;
+      }
+
+      #show-sidebar:hover {
+        background-color: white;
+      }
+
+      #show-sidebar:active {
+        background-color: #ccc;
+      }
+
+      #show-sidebar hr {
+        width: 25px;
+        height: 1px;
+        background-color: black;
+        border-color: black;
+      }
+
+      #show-sidebar hr:first-child {
+        position: relative;
+        top: 6px;
+      }
+
+      #show-sidebar hr:last-child {
+        position: relative;
+        bottom: 6px;
+      }
+
+      #basic-info {
+        margin-top: 10px;
+      }
+
+      #instructions {
+        position: relative;
         z-index: 0;
 
         width: 450px;
+      }
+
+      img {
+        margin: 1px;
+      }
+
+      #addsegs {
+        width: 420px;
+        height: 10ex;
+
+        margin-top: 15px;
+      }
+
+      #selected_segments {
+        max-height: 200px;
+        overflow-y: scroll;
+        background-color: #4a4a4a;
+        padding: 1em;
+        width: 400px;
       }
 
       canvas {
@@ -40,23 +187,39 @@
 
         image-rendering: crisp-edges;
         transition: transform .4s ease,bottom .4s ease,left .4s ease;
+        cursor: crosshair;
       }
 
-      img {
-        margin: 1px;
+      canvas.paintable.exact {
+        cursor: url("./cursors/exact.png") 20 20.5, crosshair;
       }
 
-      #addsegs {
-        width: 30em;
-        height: 20ex;
-        margin: 10px;
-        margin-left: 0px;
-        margin-top: 50px;
+      canvas.paintable.exact:active {
+        cursor: url("./cursors/exact-active.png") 20 20.5, crosshair; /* F7EDCE, color of active state */
       }
 
-      #selected_segments {
-        max-height: 200px;
-        overflow-y: scroll;
+      canvas.paintable.small {
+        cursor: url("./cursors/small.png") 16 16, crosshair
+      }
+
+      canvas.paintable.small:active {
+        cursor: url("./cursors/small-active.png") 16 16, crosshair
+      }
+
+      canvas.paintable.medium {
+        cursor: url("./cursors/medium.png") 28.5 28.5, crosshair
+      }
+
+      canvas.paintable.medium:active {
+        cursor: url("./cursors/medium-active.png") 28.5 28.5, crosshair
+      }
+
+      canvas.paintable.large {
+        cursor: url("./cursors/large.png") 53.5 53.5, crosshair
+      }
+
+      canvas.paintable.large:active {
+        cursor: url("./cursors/large-active.png") 53.5 53.5, crosshair
       }
     </style>
 
@@ -69,6 +232,14 @@
       var PXVALUE = [];
       var MOUSE_OVER_IMAGE = false;
       var MAGNIFICATION = 1;
+      var BRUSH = 0;
+
+      let BRUSH_DIAMETERS = {
+        0: 1, // px
+        1: 25,
+        2: 50,
+        3: 100,
+      };
 
       var elems; 
       var _needsrender = true;
@@ -147,11 +318,46 @@
             var x = evt.offsetX / $(this).innerWidth(), 
               y = evt.offsetY / $(this).innerHeight();
 
-            x = clamp(x, 0, 1);
-            y = clamp(y, 0, 1);  
-            
-            vol.toggleSegment(AXIS, SLICE[AXIS], x, y);  
+            x = clamp(x, 0, 0.999999999);
+            y = clamp(y, 0, 0.999999999); 
+
+            if (BRUSH == 0) {
+              vol.toggleSegment(AXIS, SLICE[AXIS], x, y);  
+            }
+            else {
+              let diameter = BRUSH_DIAMETERS[BRUSH];
+              diameter /= $(channel).innerWidth();
+
+              if (ZOOMED) {
+                diameter /= ZOOM_FACTOR;
+              }
+              
+              if (evt.which === 1) {
+                vol.selectSegsInCircle(AXIS, SLICE[AXIS], diameter, x, y);
+              }
+            }
+
             render(true);
+            evt.stopPropagation();
+          });
+
+          $(channel).on('contextmenu', function (evt) {
+            var x = evt.offsetX / $(this).innerWidth(), 
+              y = evt.offsetY / $(this).innerHeight();
+
+            x = clamp(x, 0, 0.999999999);
+            y = clamp(y, 0, 0.999999999); 
+
+            let diameter = BRUSH_DIAMETERS[BRUSH];
+            diameter /= $(channel).innerWidth();
+
+            if (ZOOMED) {
+              diameter /= ZOOM_FACTOR;
+            }
+
+            vol.eraseSegsInCircle(AXIS, SLICE[AXIS], diameter, x, y);
+            render(true);
+            evt.preventDefault();
           });
         }
       }
@@ -212,6 +418,11 @@
         });
       }
 
+      function toggleMenu () {
+        elems.rtsidebar.toggleClass("hidden");
+        elems.showsidebar.toggleClass("hidden");
+      }
+
       $(document).ready(function () {
         elems = {
           cloudpath: $('#cloudpath'),
@@ -233,6 +444,10 @@
           show_hover: $('#show_hover'),
           show_unselected: $('#show_unselected'),
           magnification: $('#magnification'),
+          showsidebar: $('#show-sidebar'),
+          rtsidebar: $('#right-sidebar'),
+          copysegs: $("#copy-segs"),
+          brushsize: $("#brush-size"),
         };
         
         window.channel = elems.channel[0];
@@ -298,7 +513,15 @@
           });
 
           loop();
-        }); 
+        });
+
+        elems.showsidebar.on("click", function () {
+          toggleMenu(); 
+        });
+
+        elems.copysegs.on("click", function () {
+          navigator.clipboard.writeText(elems.selected_segments.text());
+        });
 
         elems.addsegs.on("keypress keydown", function (evt) {
           evt.stopPropagation();
@@ -325,6 +548,10 @@
           vol.hover_id = null;
           render(true);
         });
+
+        elems.rtsidebar.on('wheel', function (e) {
+          e.stopPropagation();
+        });
       });
 
       $(document).on('wheel', function (e) {
@@ -335,6 +562,7 @@
 
       var AXES = ['z', 'y', 'x'];
       var ZOOMED = false;
+      var ZOOM_FACTOR = 10;
 
       function zoomTo () {
           let x = 0;
@@ -364,7 +592,7 @@
             elems.channel.css('transform', '');
           }
           else {
-            let zfactor = 10 / MAGNIFICATION;
+            let zfactor = ZOOM_FACTOR / MAGNIFICATION;
             let dx = x / sx - 0.5;
             let dy = y / sy - 0.5;
 
@@ -376,7 +604,6 @@
           ZOOMED = !ZOOMED;
       }
 
-
       $(document).on('keyup', function (evt) {
         if (evt.keyCode === 'A'.charCodeAt(0)) {
           rotate_axis(2);
@@ -386,6 +613,14 @@
         }
         else if (evt.keyCode === ' '.charCodeAt(0)) {
           zoomTo();
+        }
+        else if (evt.keyCode === 'Q'.charCodeAt(0)) {
+          BRUSH = Math.max(BRUSH - 1, 0);
+          render(true);
+        }
+        else if (evt.keyCode === 'E'.charCodeAt(0)) {
+          BRUSH = Math.min(BRUSH + 1, 3);
+          render(true);
         }
       });
 
@@ -438,6 +673,11 @@
             !elems.show_hover.prop("checked")
           );
         }
+        else if (evt.keyCode === "M".charCodeAt(0)
+          || evt.keyCode === "m".charCodeAt(0)) {
+          
+          toggleMenu();
+        }
         else if (evt.keyCode === "U".charCodeAt(0)
             || evt.keyCode === "u".charCodeAt(0)) {
 
@@ -466,6 +706,24 @@
         elems.show_unselected.on('click', function () {
           render(true);
         });
+
+        $("#brush-size div.exact").on("click", function () {
+          BRUSH = 0;
+          render(true);
+        });
+        $("#brush-size div.small").on("click", function () {
+          BRUSH = 1;
+          render(true);
+        });
+        $("#brush-size div.medium").on("click", function () {
+          BRUSH = 2;
+          render(true);
+        });
+        $("#brush-size div.large").on("click", function () {
+          BRUSH = 3;
+          render(true);
+        });
+
       });
 
       function rotate_axis(delta) {
@@ -486,6 +744,9 @@
 
           if (PARAMETERS.layer_type === 'image') {
             $('#instructions .segmentation').hide();
+          }
+          else {
+            $(channel).addClass("paintable");
           }
 
           PARAMETERS.cloudpath[0].split('/')
@@ -563,15 +824,22 @@
         // compute real coordinate as well
         let b = PARAMETERS.bounds;
         let real = [ SLICE.x + b[0], SLICE.y + b[1], SLICE.z + b[2] ];
+        const is_offset = (b[0] != 0) || (b[1] != 0) || (b[2] != 0);
 
         elems.axis.text(AXIS);
         elems.coord.text( `<${SLICE.x}, ${SLICE.y}, ${SLICE.z}>` );
-        elems.realcoord.text( `${real[0]}, ${real[1]}, ${real[2]}` );
+
+        if (is_offset) {
+          elems.realcoord.text( `(${real[0]}, ${real[1]}, ${real[2]})` );
+        }
 
         real = [ CLICK.x + b[0], CLICK.y + b[1], CLICK.z + b[2] ];
         
         elems.clickcoord.text( `<${CLICK.x}, ${CLICK.y}, ${CLICK.z}>` );
-        elems.clickrealcoord.text( `${real[0]}, ${real[1]}, ${real[2]}` );
+
+        if (is_offset) {
+          elems.clickrealcoord.text( `(${real[0]}, ${real[1]}, ${real[2]})` );
+        }
 
         if (vol.loaded()) {
           elems.loading.hide();
@@ -600,6 +868,23 @@
           elems.selected_segments.text( 
             vol.selected().join(', ') 
           );
+        }
+
+        if (BRUSH === 0) {
+          $(channel).removeClass("small medium large").addClass("exact");
+          elems.brushsize.removeClass("small medium large").addClass("exact");
+        }
+        else if (BRUSH === 1) {
+          $(channel).removeClass("exact medium large").addClass("small");
+          elems.brushsize.removeClass("exact medium large").addClass("small");
+        }
+        else if (BRUSH === 2) {
+          $(channel).removeClass("exact small large").addClass("medium");
+          elems.brushsize.removeClass("exact small large").addClass("medium");
+        }
+        else {
+          $(channel).removeClass("exact medium small").addClass("large"); 
+          elems.brushsize.removeClass("exact medium small").addClass("large"); 
         }
 
         _needsrender = false;
@@ -633,38 +918,66 @@
   </head>
   <body>
     <div id="infobar">
-      <span id="axis"></span> <span id="coord"></span> (<span id="realcoord"></span>) <span id="pxvalue"></span> 
+      <span id="axis"></span> <span id="magnification"></span> <span id="coord"></span> <span id="realcoord"></span> <span id="pxvalue"></span> 
       <br> 
-      Last Click: <span id="clickcoord"></span> (<span id="clickrealcoord"></span>) <span id="clickpxvalue"></span>
-      <br>
-      <span id="cloudpath"></span> 
-      <br> 
-      shape: <span id="shape"></span> bounds: (<span id="bounds"></span>)  <span id="dtype"></span> <span id="resolution"></span> nm<sup>3</sup> <span id="magnification"></span> <span id="loading"></span>
+      Last Click: <span id="clickcoord"></span> <span id="clickrealcoord"></span> <span id="clickpxvalue"></span>  <span id="loading"></span>
     </div>
 
-    <div id="instructions">
-      <p>CONTROLS</p>
-      <ul>
-        <li>W/S ,/. or scroll - advance selected images</li>
-        <li>A/D - switch slicing plane</li>
-        <li>Space - zoom in to point</li>
-        <li class='segmentation'>L - recolor segmentation labels</li>
-        <li>Left Click - freeze info about current pixel</li>
-        <li class="segmentation">X - clear selected segments</li>
-        <li class="hyperview">+/- increase, decrease opacity</li>
-        <li class='segmentation'>H - toggle hover highlight</li>
-        <li class='segmentation'>U - toggle show unselected</li>
-        <li>1/2 - zoom out/in</li>
-      </ul>
-
-      <input class="segmentation" type="checkbox" id="show_hover" name="show_hover" checked="checked"/> <label class="segmentation" for="show_hover">Highlight Hover?</label>
-      <input class="segmentation" type="checkbox" id="show_unselected" name="show_unselected" /> <label class="segmentation" for="show_unselected">Show Unselected?</label>
-      <p class="segmentation">SELECTED SEGMENTS</p>
-      <div class="segmentation" id="selected_segments"></div>
-      <textarea id="addsegs" class="segmentation" type="text" placeholder="Input comma separated segids and press enter."></textarea>
+    <div id="show-sidebar" class="hidden">
+      <hr />
+      <hr />
+      <hr />
     </div>
-    
-    <canvas id="channel" width="256" height="256"></canvas>
+    <div id="right-sidebar" class="hidden">
+      <div id="instructions">
+        <div id="basic-info">
+          <span id="cloudpath"></span> 
+          <p>DIMENSIONS</p>
+          shape: <span id="shape"></span> 
+          <br />
+          bounds: (<span id="bounds"></span>)
+          <br / >
+          dtype: <span id="dtype"></span>
+          <br />
+          resolution: <span id="resolution"></span> nm<sup>3</sup>
+        </div>
+
+        <p class="segmentation">SELECTION VISIBILITY</p>
+        <input class="segmentation" type="checkbox" id="show_hover" name="show_hover" checked="checked"/> <label class="segmentation" for="show_hover">Highlight Hover?</label>
+        <input class="segmentation" type="checkbox" id="show_unselected" name="show_unselected" /> <label class="segmentation" for="show_unselected">Show Unselected?</label>
+
+        <p class="segmentation">BRUSH SIZE</p>
+        <div class="segmentation" id="brush-size">
+          <div class="exact"></div>
+          <div class="small"></div>
+          <div class="medium"></div>
+          <div class="large"></div>
+        </div>
+
+        <p class="segmentation">SELECTED SEGMENTS <button id="copy-segs">copy</button></p>
+        <div class="segmentation" id="selected_segments"></div>
+        <textarea id="addsegs" class="segmentation" type="text" placeholder="Input comma separated segids and press enter."></textarea>
+
+        <p>CONTROLS</p>
+        <ul>
+          <li>W/S ,/. or scroll - advance selected images</li>
+          <li>A/D - switch slicing plane</li>
+          <li>Space - zoom in to point</li>
+          <li class='segmentation'>L - recolor segmentation labels</li>
+          <li>Left Click - <span class="segmentation">paint, </span>freeze info about current pixel</li>
+          <li class="segmentation">Right Click - erase</li>
+          <li class="segmentation">X - clear selected segments</li>
+          <li class="hyperview">+/- increase, decrease opacity</li>
+          <li class='segmentation'>H - toggle hover highlight</li>
+          <li class='segmentation'>U - toggle show unselected</li>
+          <li>1/2 - zoom out/in</li>
+          <li>M - show/hide menu</li>
+          <li class="segmentation">Q/E - decrease/increase brush size</li>
+        </ul>
+      </div>
+    </div>
+
+    <canvas oncontextmenu="return false;" id="channel" class="exact" width="256" height="256"></canvas>
 
   </body>
 </html>

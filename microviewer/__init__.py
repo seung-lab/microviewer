@@ -111,7 +111,13 @@ class ViewerServerHandler(BaseHTTPRequestHandler):
   def do_GET(self):
     self.send_response(200)
   
-    allowed_files = ('/', '/datacube.js', '/jquery-3.7.0.min.js', '/favicon.ico')
+    allowed_files = (
+      '/', '/datacube.js', '/jquery-3.7.0.min.js', '/favicon.ico',
+      "/cursors/exact.png", "/cursors/small.png", "/cursors/medium.png",
+      "/cursors/large.png",
+      "/cursors/exact-active.png", "/cursors/small-active.png", 
+      "/cursors/medium-active.png", "/cursors/large-active.png",
+    )
 
     if self.path in allowed_files:
       self.serve_file()
@@ -177,13 +183,19 @@ class ViewerServerHandler(BaseHTTPRequestHandler):
     self.send_header('Content-type', 'text/html')
     self.end_headers()
 
-    path = self.path.replace('/', '')
+    path = self.path.replace('/', '', 1)
+    path_elems = path.split("/")
+
+    if len(path_elems) > 2:
+      raise ValueError("Invalid path.")
+    elif len(path_elems) == 2 and path_elems[0] != "cursors":
+      raise ValueError("Invalid path.")
 
     if path == '':
       path = 'index.html'
 
     dirname = os.path.dirname(__file__)
-    filepath = os.path.join(dirname, './' + path)
+    filepath = os.path.join(dirname, path)
     try:
       with open(filepath, 'rb') as f:
         self.wfile.write(f.read())  
