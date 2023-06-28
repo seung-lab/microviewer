@@ -326,11 +326,38 @@
             }
             else {
               let diameter = BRUSH_DIAMETERS[BRUSH];
-              diameter /= $(channel).width();
-              vol.selectSegsInCircle(AXIS, SLICE[AXIS], diameter, x, y);
+              diameter /= $(channel).innerWidth();
+
+              if (ZOOMED) {
+                diameter /= ZOOM_FACTOR;
+              }
+              
+              if (evt.which === 1) {
+                vol.selectSegsInCircle(AXIS, SLICE[AXIS], diameter, x, y);
+              }
             }
 
             render(true);
+            evt.stopPropagation();
+          });
+
+          $(channel).on('contextmenu', function (evt) {
+            var x = evt.offsetX / $(this).innerWidth(), 
+              y = evt.offsetY / $(this).innerHeight();
+
+            x = clamp(x, 0, 0.999999999);
+            y = clamp(y, 0, 0.999999999); 
+
+            let diameter = BRUSH_DIAMETERS[BRUSH];
+            diameter /= $(channel).innerWidth();
+
+            if (ZOOMED) {
+              diameter /= ZOOM_FACTOR;
+            }
+
+            vol.eraseSegsInCircle(AXIS, SLICE[AXIS], diameter, x, y);
+            render(true);
+            evt.preventDefault();
           });
         }
       }
@@ -535,6 +562,7 @@
 
       var AXES = ['z', 'y', 'x'];
       var ZOOMED = false;
+      var ZOOM_FACTOR = 10;
 
       function zoomTo () {
           let x = 0;
@@ -564,7 +592,7 @@
             elems.channel.css('transform', '');
           }
           else {
-            let zfactor = 10 / MAGNIFICATION;
+            let zfactor = ZOOM_FACTOR / MAGNIFICATION;
             let dx = x / sx - 0.5;
             let dy = y / sy - 0.5;
 
@@ -948,7 +976,7 @@
       </div>
     </div>
 
-    <canvas id="channel" class="exact" width="256" height="256"></canvas>
+    <canvas oncontextmenu="return false;" id="channel" class="exact" width="256" height="256"></canvas>
 
   </body>
 </html>
