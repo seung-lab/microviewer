@@ -234,6 +234,7 @@
       var MAGNIFICATION = 1;
       var BRUSH = 0;
       var PAINTING_MODE = 0;
+      var PAINT_MOVED = false;
 
       let BRUSH_DIAMETERS = {
         0: 1, // px
@@ -358,12 +359,15 @@
 
           $(channel)
             .on('click', function (evt) {
-              if (BRUSH > 0) {
+              if (BRUSH > 0 || PAINT_MOVED) {
                 return;
               }
 
-              var x = evt.offsetX / $(channel).innerWidth(), 
-                y = evt.offsetY / $(channel).innerHeight();
+              let innerWidth = $(channel).innerWidth();
+              let innerHeight = $(channel).innerHeight();
+
+              var x = evt.offsetX / innerWidth, 
+                y = evt.offsetY / innerHeight;
 
               x = clamp(x, 0, 0.999999999);
               y = clamp(y, 0, 0.999999999); 
@@ -373,10 +377,11 @@
               }
             })
             .on('mousedown', function (evt) {
+              PAINTING_MODE = 1;
               if (BRUSH === 0) {
+                PAINT_MOVED = false;
                 return;
               }
-              PAINTING_MODE = 1;
               paint(evt);
               evt.stopPropagation();
             })
@@ -386,7 +391,8 @@
               evt.stopPropagation();
             })
             .on('mousemove', function (evt) {
-              if (PAINTING_MODE > 0 && BRUSH > 0) {
+              if (PAINTING_MODE > 0) {
+                PAINT_MOVED = true;
                 if (PAINTING_MODE === 1) {
                   paint(evt);
                 }
@@ -398,6 +404,7 @@
             })
             .on('contextmenu', function (evt) {
               PAINTING_MODE = 2;
+              PAINT_MOVED = false;
               erase(evt);
               evt.stopPropagation();
               evt.preventDefault();
