@@ -774,6 +774,17 @@ class DataCube {
     ];
   }
 
+  save (filename = "image.bin") {
+    const blob = new Blob([ this.cube.buffer ]);
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   // for internal use, makes a canvas for blitting images to
   createImageContext () {
     let canvas = document.createElement('canvas');
