@@ -162,9 +162,11 @@ class SegmentationVolume extends MonoVolume {
     super(datacube);
     this.segments = {};
     this.renumbering = new datacube.cube.constructor(1);
+    this.inverse_renumbering = {};
     this.has_segmentation = true;
     this.hover_id = null;
     this.show_unselected = false;
+    this.max_label = 0;
   }
 
   selected () {
@@ -186,8 +188,12 @@ class SegmentationVolume extends MonoVolume {
     const _this = this;
     return super.load(url, progressfn)
       .then(function () { 
-        _this.renumbering = renumber(_this.channel.cube);
+        [ _this.renumbering, _this.max_label ] = renumber(_this.channel.cube);
         _this.initializeColorAssignments(_this.channel.cube);
+
+        for (const [key, value] of Object.entries(_this.renumbering)) {
+          _this.inverse_renumbering[value] = key;
+        }
       });
   }
 
@@ -413,6 +419,14 @@ class SegmentationVolume extends MonoVolume {
     let _this = this;
     let [ width, height ] = _this.channel.faceDimensions(axis);
 
+    if (_this.inverse_renumbering[label] === undefined) {
+      _this.renumbering[_this.max_label] = label;
+      _this.inverse_renumbering[label] = _this.max_label;
+      _this.assigned_colors[_this.max_label] = _this.colorToUint32({r:0,g:230,b:0}, 1);
+      _this.max_label++;
+    }
+    label = _this.inverse_renumbering[label];
+
     cx = Math.floor(cx * width) + 0.5;
     cy = Math.floor(cy * height) + 0.5;
 
@@ -496,6 +510,7 @@ class HyperVolume extends MonoVolume {
 
     this.renumbering = new segmentation.cube.constructor(1);
     this.has_segmentation = true;
+    this.max_label = 0;
 
     this.segments = {};
     this.alpha = 0.5;
@@ -566,7 +581,7 @@ class HyperVolume extends MonoVolume {
         _this.segmentation.normalized = false;
         _this.cache.valid = false;
 
-        _this.renumbering = renumber(_this.segmentation.cube);
+        [ _this.renumbering, _this.max_label ] = renumber(_this.segmentation.cube);
         _this.initializeColorAssignments(_this.segmentation.cube);
 
         return _this.segmentation;
@@ -1583,12 +1598,13 @@ function renumber (cube) {
     }
   }
 
-  let renumbering = new cube.constructor(Number(next_label));
+  // +10000 for 10000 paint slots
+  let renumbering = new cube.constructor(Number(next_label) + 10000);
   for (let [label, remap] of assignments) {
     renumbering[remap] = label;
   }
 
-  return renumbering;
+  return [ renumbering, next_label ];
 }
 
 
