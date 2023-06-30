@@ -326,7 +326,15 @@
           }
           
           if (evt.which === 1) {
-            vol.selectSegsInCircle(AXIS, SLICE[AXIS], diameter, x, y);
+            if (elems.paintmode.prop("checked")) {
+              let label = parseInt(elems.paintlabel.val());
+              if (!isNaN(label)) {
+                vol.paintCircle(AXIS, SLICE[AXIS], diameter, x, y, label);
+              }
+            }
+            else {
+              vol.selectSegsInCircle(AXIS, SLICE[AXIS], diameter, x, y);
+            }
           }
     
           render(true);
@@ -346,7 +354,12 @@
             diameter /= ZOOM_FACTOR;
           }
 
-          vol.eraseSegsInCircle(AXIS, SLICE[AXIS], diameter, x, y);
+          if (elems.paintmode.prop("checked")) {
+            vol.paintCircle(AXIS, SLICE[AXIS], diameter, x, y, 0);
+          }
+          else {
+            vol.eraseSegsInCircle(AXIS, SLICE[AXIS], diameter, x, y);
+          }
           render(true);  
         }
 
@@ -498,6 +511,8 @@
           rtsidebar: $('#right-sidebar'),
           copysegs: $("#copy-segs"),
           brushsize: $("#brush-size"),
+          paintmode: $("#paint_voxels"),
+          paintlabel: $("#paintlabel"),
         };
         
         window.channel = elems.channel[0];
@@ -563,6 +578,10 @@
           });
 
           loop();
+        });
+
+        elems.paintlabel.on("keyup keypress keydown", function (evt) {
+          evt.stopPropagation();
         });
 
         elems.showsidebar.on("click", function () {
@@ -735,6 +754,13 @@
             !elems.show_unselected.prop("checked")
           );
           render(true);
+        }
+        else if (evt.keyCode === "P".charCodeAt(0)
+            || evt.keyCode === "p".charCodeAt(0)) {
+
+          elems.paintmode.prop("checked", 
+            !elems.paintmode.prop("checked")
+          );
         }
         else if (evt.keyCode === "1".charCodeAt(0)) {
           MAGNIFICATION /= 2;
@@ -993,8 +1019,9 @@
         </div>
 
         <p class="segmentation">SELECTION VISIBILITY</p>
-        <input class="segmentation" type="checkbox" id="show_hover" name="show_hover" checked="checked"/> <label class="segmentation" for="show_hover">Highlight Hover?</label>
-        <input class="segmentation" type="checkbox" id="show_unselected" name="show_unselected" /> <label class="segmentation" for="show_unselected">Show Unselected?</label>
+        <input class="segmentation" type="checkbox" id="show_hover" name="show_hover" checked="checked"/> <label class="segmentation" for="show_hover">Highlight (H)over?</label>
+        <input class="segmentation" type="checkbox" id="show_unselected" name="show_unselected" /> <label class="segmentation" for="show_unselected">Show (U)nselected?</label> <br />
+        <input class="segmentation" type="checkbox" id="paint_voxels" name="paint_voxels" /> <label class="segmentation" for="paint_voxels">Direct (P)aint?</label>
 
         <p class="segmentation">BRUSH SIZE</p>
         <div class="segmentation" id="brush-size">
@@ -1002,6 +1029,11 @@
           <div class="small"></div>
           <div class="medium"></div>
           <div class="large"></div>
+        </div>
+
+        <p class="segmentation">PAINT LABEL</p>
+        <div class="segmentation">
+          <input id="paintlabel" type="number" value="1" />
         </div>
 
         <p class="segmentation">SELECTED SEGMENTS <button id="copy-segs">copy</button></p>
@@ -1020,6 +1052,7 @@
           <li class="hyperview">+/- increase, decrease opacity</li>
           <li class='segmentation'>H - toggle hover highlight</li>
           <li class='segmentation'>U - toggle show unselected</li>
+          <li class='segmentation'>P - toggle direct voxel painting</li>
           <li>1/2 - zoom out/in</li>
           <li>M - show/hide menu</li>
           <li class="segmentation">Q/E - decrease/increase brush size</li>
