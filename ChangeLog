@@ -1,6 +1,25 @@
 CHANGES
 =======
 
+* fix: crackle download
+* fix: numpy download working
+* fix: incorrect array size
+* fix: save numpy
+* fix: ensure header length set properly
+* wip: broken but semi-functional crackle compression+save
+* fix: NaN labels and prevent propagation of events when typing
+* feat: add direct voxel painting
+* feat: add save function to datacube
+
+1.3.0
+-----
+
+* fix: more natural interaction with single point toggle
+* feat: add drag selection and erase
+* feat: adds paint function (but no UI support yet)
+* fix: nicer error handling for CLI
+* fix: decompress .ckl w/o .gz
+
 1.2.0
 -----
 
