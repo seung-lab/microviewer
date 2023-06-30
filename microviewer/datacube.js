@@ -650,33 +650,63 @@ class HyperVolume extends MonoVolume {
 
     let hover = false;
     let i4;
+    let color = 0;
 
     if (alpha > 0 && alpha < 1) {
+      if (show_unselected) {
+        for (let i = pixels32.length - 1; i >= 0; i--) {
+          segid = segmentation[i];
+          if (segid === 0) {
+            continue;
+          }
+          hover = (segid === hover_id);
+          i4 = i << 2;
+          if (selected_segments[segid]) {
+            color = white;
+          }
+          else {
+            color = color_assignments[segid];
+          }
+          pxdata[i4] = ((pxdata[i4] * ialpha) + ((color & masks[0]) * alpha)) | 0;
+          pxdata[i4 + 1] = ((pxdata[i4 + 1] * ialpha) + (((color & masks[1]) >>> 8) * alpha)) | 0;
+          pxdata[i4 + 2] = ((pxdata[i4 + 2] * ialpha) + (((color & masks[2]) >>> 16) * alpha)) | 0;
+          pixels32[i] += hover * brightener;
+        }
+      }
+      else {
+        for (let i = pixels32.length - 1; i >= 0; i--) {
+          segid = segmentation[i];
+          if (segid === 0) {
+            continue;
+          }
+          hover = (segid === hover_id);
+          i4 = i << 2;
+          if (show_all | selected_segments[segid] | hover) {
+            pxdata[i4] = ((pxdata[i4] * ialpha) + ((color_assignments[segid] & masks[0]) * alpha)) | 0;
+            pxdata[i4 + 1] = ((pxdata[i4 + 1] * ialpha) + (((color_assignments[segid] & masks[1]) >>> 8) * alpha)) | 0;
+            pxdata[i4 + 2] = ((pxdata[i4 + 2] * ialpha) + (((color_assignments[segid] & masks[2]) >>> 16) * alpha)) | 0;
+            pixels32[i] += hover * brightener;
+          }
+        }
+      }
+    }
+    else if (alpha === 1) {
+      show_all = show_all || show_unselected;
       for (let i = pixels32.length - 1; i >= 0; i--) {
         segid = segmentation[i];
         if (segid === 0) {
           continue;
         }
-        hover = (segid === hover_id) & segid > 0;
-        i4 = i << 2;
-        if (show_all | selected_segments[segid] | hover) {
-          pxdata[i4] = ((pxdata[i4] * ialpha) + ((color_assignments[segid] & masks[0]) * alpha)) | 0;
-          pxdata[i4 + 1] = ((pxdata[i4 + 1] * ialpha) + (((color_assignments[segid] & masks[1]) >>> 8) * alpha)) | 0;
-          pxdata[i4 + 2] = ((pxdata[i4 + 2] * ialpha) + (((color_assignments[segid] & masks[2]) >>> 16) * alpha)) | 0;
-          pixels32[i] += hover * brightener;
+        hover = (segid === hover_id);
+        color = color_assignments[segid];
+        if (show_unselected & selected_segments[segid]) {
+          color = white;
         }
-      }
-    }
-    else if (alpha === 1) {
-      for (let i = pixels32.length - 1; i >= 0; i--) {
-        segid = segmentation[i];
-        hover = (segid === hover_id) && segid;
-        
         if (hover) {
-          pixels32[i] = color_assignments[segid] + brightener;
+          pixels32[i] = color + brightener;
         }
-        else if (selected_segments[segid]) {
-          pixels32[i] = color_assignments[segid];
+        else if (selected_segments[segid] | show_all) {
+          pixels32[i] = color;
         }
       }
     }
