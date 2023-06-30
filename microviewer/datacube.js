@@ -430,6 +430,7 @@ class SegmentationVolume extends MonoVolume {
       _this.max_label++;
     }
     label = _this.inverse_renumbering[label];
+    _this.segments[label] = true;
 
     cx = Math.floor(cx * width) + 0.5;
     cy = Math.floor(cy * height) + 0.5;
@@ -830,6 +831,7 @@ class HyperVolume extends MonoVolume {
       _this.max_label++;
     }
     label = _this.inverse_renumbering[label];
+    _this.segments[label] = true;
 
     cx = Math.floor(cx * width) + 0.5;
     cy = Math.floor(cy * height) + 0.5;
