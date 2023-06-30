@@ -774,8 +774,51 @@ class DataCube {
     ];
   }
 
-  save (filename = "image.bin") {
-    const blob = new Blob([ this.cube.buffer ]);
+  numpyHeader () {
+    const dtype = `<u${this.bytes}`;
+    const shape = `${this.size.x},${this.size.y},${this.size.z}`;
+    const header = `{"descr": "${dtype}", "fortran_order": True, "shape": (${shape}), }`;
+    const encoder = new TextEncoder();
+    const headerBytes = encoder.encode(header);
+
+    // \x93NUMPY\x01\x00
+    const magic = [0x93, 0x4E, 0x55, 0x4D, 0x50, 0x59, 0x01, 0x00]; 
+    let headerLength = headerBytes.length + 10; 
+
+    // align to 64 bytes and fill with spaces 0x20
+    headerLength = Math.ceil(headerLength / 64) * 64;
+
+    const combinedBytes = new Uint8Array(headerLength);
+    combinedBytes.fill(0x20);
+    combinedBytes.set(magic, 0);
+    combinedBytes[8] = headerLength - 10;
+    combinedBytes[9] = 0;
+    combinedBytes.set(headerBytes, 10);
+    combinedBytes[headerLength - 1] = 10;
+    return combinedBytes;
+  }
+
+  saveNumpy (filename) {
+    const npyHeader = this.numpyHeader();
+    // Create a combined array of header and data bytes
+    const combinedBytes = new Uint8Array(npyHeader.length + this.cube.byteLength);
+    const cubeview = new Uint8Array(this.cube.buffer, 0, this.cube.byteLength);
+    combinedBytes.set(npyHeader, 0);
+    combinedBytes.set(cubeview, npyHeader.length);
+    this.save(filename, combinedBytes);
+  }
+
+  async saveCrackle(filename) {
+    const cubeview = new Uint8Array(this.cube.buffer, 0, this.cube.byteLength);
+    const buffer = await compressCrackle(
+      cubeview, this.bytes,
+      this.size.x, this.size.y, this.size.z,
+    );
+    this.save(filename, buffer);
+  }
+
+  save (filename, buffer) {
+    const blob = new Blob([ buffer.buffer ]);
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = filename;

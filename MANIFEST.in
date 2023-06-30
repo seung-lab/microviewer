@@ -1,1 +1,2 @@
 include microviewer/cursors/*
+include microviewer/libcrackle.wasm
