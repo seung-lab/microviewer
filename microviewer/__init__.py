@@ -112,11 +112,13 @@ class ViewerServerHandler(BaseHTTPRequestHandler):
     self.send_response(200)
   
     allowed_files = (
-      '/', '/datacube.js', '/jquery-3.7.0.min.js', '/favicon.ico',
+      "/", 
+      "/datacube.js", "/crackle.js", "/jquery-3.7.0.min.js", "/favicon.ico",
       "/cursors/exact.png", "/cursors/small.png", "/cursors/medium.png",
       "/cursors/large.png",
       "/cursors/exact-active.png", "/cursors/small-active.png", 
       "/cursors/medium-active.png", "/cursors/large-active.png",
+      "/libcrackle.wasm"
     )
 
     if self.path in allowed_files:
