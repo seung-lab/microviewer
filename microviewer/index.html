@@ -1041,6 +1041,13 @@
         <div class="segmentation" id="selected_segments"></div>
         <textarea id="addsegs" class="segmentation" type="text" placeholder="Input comma separated segids and press enter."></textarea>
 
+        <p class="segmentation">SAVE</p>
+
+        <div class="segmentation">
+          <button onclick="vol.channel.saveNumpy('image.npy')">.npy</button> 
+          <button onclick="vol.channel.saveCrackle('image.ckl')">.ckl</button>
+        </div>
+
         <p>CONTROLS</p>
         <ul>
           <li>W/S ,/. or scroll - advance selected images</li>

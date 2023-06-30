@@ -791,7 +791,7 @@ class DataCube {
     const combinedBytes = new Uint8Array(headerLength);
     combinedBytes.fill(0x20);
     combinedBytes.set(magic, 0);
-    combinedBytes[8] = headerLength;
+    combinedBytes[8] = headerLength - 10;
     combinedBytes[9] = 0;
     combinedBytes.set(headerBytes, 10);
     combinedBytes[headerLength - 1] = 10;
