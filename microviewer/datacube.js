@@ -802,8 +802,9 @@ class DataCube {
     const npyHeader = this.numpyHeader();
     // Create a combined array of header and data bytes
     const combinedBytes = new Uint8Array(npyHeader.length + this.cube.byteLength);
+    const cubeview = new Uint8Array(this.cube.buffer, 0, this.cube.byteLength);
     combinedBytes.set(npyHeader, 0);
-    combinedBytes.set(this.cube, npyHeader.length);
+    combinedBytes.set(cubeview, npyHeader.length);
     this.save(filename, combinedBytes);
   }
 

@@ -125,9 +125,7 @@ function compressCrackle(buffer, dataWidth, sx, sy, sz) {
                     streamPtr = m.instance.exports.malloc(buffer.byteLength);
                     heap = new Uint8Array(m.instance.exports.memory.buffer);
                     heap.set(buffer, bufPtr);
-                    debugger;
                     streamSize = m.instance.exports.crackle_compress(bufPtr, dataWidth, sx, sy, sz, streamPtr, buffer.byteLength);
-                    console.log(streamSize);
                     try {
                         if (streamSize <= 0) {
                             throw new Error("crackle: Failed to encode image. encoder code: ".concat(streamSize));
