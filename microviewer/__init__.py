@@ -182,7 +182,17 @@ class ViewerServerHandler(BaseHTTPRequestHandler):
     self.wfile.write(msg.encode('utf-8'))
 
   def serve_file(self):
-    self.send_header('Content-type', 'text/html')
+    _, ext = os.path.splitext(self.path)
+
+    content_type = "text/html"
+    if ext == ".js":
+      content_type = "application/javascript"
+    elif ext == ".png":
+      content_type = "image/png"
+    elif ext == ".wasm":
+      content_type ="application/octet-stream"
+
+    self.send_header('Content-type', content_type)
     self.end_headers()
 
     path = self.path.replace('/', '', 1)
