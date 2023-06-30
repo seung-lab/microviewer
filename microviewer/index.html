@@ -327,7 +327,10 @@
           
           if (evt.which === 1) {
             if (elems.paintmode.prop("checked")) {
-              vol.paintCircle(AXIS, SLICE[AXIS], diameter, x, y, elems.paintlabel.val());
+              let label = parseInt(elems.paintlabel.val());
+              if (!isNaN(label)) {
+                vol.paintCircle(AXIS, SLICE[AXIS], diameter, x, y, label);
+              }
             }
             else {
               vol.selectSegsInCircle(AXIS, SLICE[AXIS], diameter, x, y);
@@ -575,6 +578,10 @@
           });
 
           loop();
+        });
+
+        elems.paintlabel.on("keyup keypress keydown", function (evt) {
+          evt.stopPropagation();
         });
 
         elems.showsidebar.on("click", function () {
