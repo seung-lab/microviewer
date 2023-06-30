@@ -487,6 +487,7 @@
           brushsize: $("#brush-size"),
           paintmode: $("#paint_voxels"),
           paintlabel: $("#paintlabel"),
+          memoryusage: $("#memory-usage"),
         };
         
         window.channel = elems.channel[0];
@@ -690,7 +691,7 @@
         ) {
           
           vol.shuffleColors();
-          render(true);          
+          render(true);   
         }
         else if (evt.keyCode === 'X'.charCodeAt(0)
           || evt.keyCode === 'x'.charCodeAt(0)) {
@@ -828,6 +829,17 @@
         elems.dtype.text( PARAMETERS.data_types.join("; ") );
         elems.resolution.text( PARAMETERS.resolution.join('x') );
         elems.shape.text( `<${SIZE.x}, ${SIZE.y}, ${SIZE.z}>` );
+
+
+
+        let bytes = PARAMETERS["data_bytes"];
+
+        if (Array.isArray(bytes)) {
+          bytes = bytes.reduce((partialSum, a) => partialSum + a, 0);
+        }
+        bytes *= SIZE.x * SIZE.y * SIZE.z;
+        let megabytes = Math.floor(bytes / 1e6);
+        elems.memoryusage.text(`${megabytes}`);
       }
 
       function update_pxvalue () {
@@ -1012,6 +1024,8 @@
           dtype: <span id="dtype"></span>
           <br />
           resolution: <span id="resolution"></span> nm<sup>3</sup>
+          <br />
+          memory: <span id="memory-usage"></span> MB
         </div>
 
         <p class="segmentation">SELECTION VISIBILITY</p>
