@@ -809,8 +809,9 @@ class DataCube {
   }
 
   async saveCrackle(filename) {
+    const cubeview = new Uint8Array(this.cube.buffer, 0, this.cube.byteLength);
     const buffer = await compressCrackle(
-      this.cube, this.bytes,
+      cubeview, this.bytes,
       this.size.x, this.size.y, this.size.z,
     );
     this.save(filename, buffer);
