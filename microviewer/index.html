@@ -626,6 +626,9 @@
           if (ZOOMED) {
             elems.channel.css('transform', '');
           }
+          else if (MAGNIFICATION > ZOOM_FACTOR) {
+            return;
+          }
           else {
             let zfactor = ZOOM_FACTOR / MAGNIFICATION;
             let dx = x / sx - 0.5;
