@@ -1,6 +1,22 @@
 CHANGES
 =======
 
+1.4.0
+-----
+
+* ui: add some help text to the save options
+* ui: display memory usage
+* fix: preload cursor images
+* feat: add show unselected rendering mode to hyperview
+* fix: ensure paint is selected so it doesn't disappear
+* docs: be more specfic that saving is for segmentation
+* feat: add --paint feature to images
+* feat: enable saving segmentation for hyperview
+* fix: disable spacebar zoom over 10x
+* feat: add painting to hyperview
+* fix: add appropriate mime types
+* fix: ensure paint is treated correctly
+* install: ensure libcrackle.wasm is included
 * fix: crackle download
 * fix: numpy download working
 * fix: incorrect array size

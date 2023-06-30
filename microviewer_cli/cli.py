@@ -134,14 +134,34 @@ def main(
     segmentation_np = np.zeros(image_np.shape, dtype=np.uint16, order="F")
     segmentation = "PAINTING"
 
+  port = 8080
+  working_port = False
+  for i in range(10):
+    port += 1
+    if not is_port_in_use(port):
+      working_port = True
+      break
+  
+  if not working_port:
+    print("Ports 8080 to 8090 are all in use.")
+    return
+
   if segmentation is not None:
     microviewer.hyperview(
       image_np, segmentation_np, 
       browser=browser, 
       cloudpath=[ image, segmentation ],
+      port=port,
     )
   else:
     microviewer.view(
       image_np, seg=seg, 
-      browser=browser, cloudpath=image
+      browser=browser, cloudpath=image,
+      port=port,
     )
+
+# from: https://stackoverflow.com/questions/2470971/fast-way-to-test-if-a-port-is-in-use-using-python
+def is_port_in_use(port: int) -> bool:
+  import socket
+  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    return s.connect_ex(('localhost', port)) == 0
