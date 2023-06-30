@@ -268,30 +268,13 @@
         });
       }
 
-      function setup_single_volume (data) {  
-        render_static();
-
-        let datacube = create_datacube(data.data_types[0], data.data_bytes, SIZE);
-
-        if (data.layer_type === 'segmentation') {
-          window.vol = new SegmentationVolume(datacube, true);
-        }
-        else {
-          window.vol = new MonoVolume(datacube, false);
-        }
-
-        let vol = window.vol;
-
-        vol.load('/channel', function (ratio) {
-          render();
-        }).then( () => render() );
-
+      function configure_segmentation_ui () {
         $(channel).on('mousemove', function (e) {
           e.stopPropagation();
           MOUSE_OVER_IMAGE = true;
 
-          let x = e.offsetX / $(this).innerWidth(), 
-            y = e.offsetY / $(this).innerHeight();
+          let x = e.offsetX / $(channel).innerWidth(), 
+            y = e.offsetY / $(channel).innerHeight();
 
           x = clamp(x, 0, 0.999999999);
           y = clamp(y, 0, 0.999999999);
@@ -426,6 +409,27 @@
         }
       }
 
+      function setup_single_volume (data) {  
+        render_static();
+
+        let datacube = create_datacube(data.data_types[0], data.data_bytes, SIZE);
+
+        if (data.layer_type === 'segmentation') {
+          window.vol = new SegmentationVolume(datacube, true);
+        }
+        else {
+          window.vol = new MonoVolume(datacube, false);
+        }
+
+        let vol = window.vol;
+
+        vol.load('/channel', function (ratio) {
+          render();
+        }).then( () => render() );
+
+        configure_segmentation_ui();
+      }
+
       function setup_hyper_volume (data) {
         render_static();
 
@@ -440,46 +444,7 @@
           render();
         }).then( () => render() );
 
-        $(channel).on('mousemove', function (e) {
-          e.stopPropagation();
-          MOUSE_OVER_IMAGE = true;
-          var x = e.offsetX / $(this).innerWidth(), 
-            y = e.offsetY / $(this).innerHeight();
-
-          x = clamp(x, 0, 0.999999999);
-          y = clamp(y, 0, 0.999999999);
-
-          if (AXIS == 'z') {
-            SLICE.x = (x * SIZE.x)|0;
-            SLICE.y = (y * SIZE.y)|0;
-          }
-          else if (AXIS == 'y') {
-            SLICE.x = (x * SIZE.x)|0;
-            SLICE.z = (y * SIZE.z)|0;
-          }
-          else if (AXIS == 'x') {
-            SLICE.y = (x * SIZE.y)|0;
-            SLICE.z = (y * SIZE.z)|0;
-          }
-
-          render(); 
-        });
-
-        $(document).on("mousemove", function () {
-          MOUSE_OVER_IMAGE = false;
-          render();
-        });
-
-        $(channel).on('click', function (evt) {
-          var x = evt.offsetX / $(this).innerWidth(), 
-            y = evt.offsetY / $(this).innerHeight();
-
-          x = clamp(x, 0, 1);
-          y = clamp(y, 0, 1);  
-          
-          vol.toggleSegment(AXIS, SLICE[AXIS], x, y);
-          render(true);
-        });
+        configure_segmentation_ui();
       }
 
       function toggleMenu () {
@@ -827,6 +792,9 @@
           }
 
           PARAMETERS.cloudpath[0].split('/')
+        }
+        else {
+          $(channel).addClass("paintable");
         }
 
         let hyper = (PARAMETERS.viewtype === 'hyper') ? 'Hyper ' : '';

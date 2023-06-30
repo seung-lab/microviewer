@@ -44,6 +44,8 @@ class MonoVolume {
       last = cube[i];
     }
 
+    assignments[0] = 0;
+
     this.assigned_colors = assignments;
     this.shuffleColors();
   }
@@ -58,6 +60,7 @@ class MonoVolume {
       ];
     }
 
+    this.assigned_colors[0] = 0;
     this.cache.valid = false;
   }
 
@@ -194,6 +197,7 @@ class SegmentationVolume extends MonoVolume {
         for (const [key, value] of Object.entries(_this.renumbering)) {
           _this.inverse_renumbering[value] = key;
         }
+        _this.inverse_renumbering[0] = 0;
       });
   }
 
@@ -509,7 +513,11 @@ class HyperVolume extends MonoVolume {
     this.segmentation = segmentation; // a segmentation cube
 
     this.renumbering = new segmentation.cube.constructor(1);
+    this.inverse_renumbering = {};
     this.has_segmentation = true;
+    this.max_label = 0;
+
+    this.show_unselected = false;
     this.max_label = 0;
 
     this.segments = {};
@@ -584,6 +592,11 @@ class HyperVolume extends MonoVolume {
         [ _this.renumbering, _this.max_label ] = renumber(_this.segmentation.cube);
         _this.initializeColorAssignments(_this.segmentation.cube);
 
+        for (const [key, value] of Object.entries(_this.renumbering)) {
+          _this.inverse_renumbering[value] = key;
+        }
+        _this.inverse_renumbering[0] = 0;
+
         return _this.segmentation;
       });
 
@@ -620,12 +633,16 @@ class HyperVolume extends MonoVolume {
     let masks = _this.segmentation.getRenderMaskSet();
     masks = Uint32Array.of(masks.r, masks.g, masks.b);
     const brightener = this.colorToUint32({ r: 10, g: 10, b: 10, a: 0 });
+    const white = this.colorToUint32({ r: 200, g: 200, b: 200 }, 1);
     const hover_id = this.hover_id;
 
     let segments = this.segments;
+    let show_all = true;
+    const show_unselected = this.show_unselected;
     let selected_segments = new Uint8Array(this.renumbering.length);
-    Object.keys(_this.segments).forEach((label) => {
+    Object.keys(segments).forEach((label) => {
       selected_segments[label] = !!segments[label];
+      show_all &&= !segments[label];
     });
 
     let pxdata = pixels.data;
@@ -636,9 +653,12 @@ class HyperVolume extends MonoVolume {
     if (alpha > 0 && alpha < 1) {
       for (let i = pixels32.length - 1; i >= 0; i--) {
         segid = segmentation[i];
+        if (segid === 0) {
+          continue;
+        }
         hover = (segid === hover_id) & segid > 0;
         i4 = i << 2;
-        if (selected_segments[segid] | hover) {
+        if (show_all | selected_segments[segid] | hover) {
           pxdata[i4] = ((pxdata[i4] * ialpha) + ((color_assignments[segid] & masks[0]) * alpha)) | 0;
           pxdata[i4 + 1] = ((pxdata[i4 + 1] * ialpha) + (((color_assignments[segid] & masks[1]) >>> 8) * alpha)) | 0;
           pxdata[i4 + 2] = ((pxdata[i4 + 2] * ialpha) + (((color_assignments[segid] & masks[2]) >>> 16) * alpha)) | 0;
@@ -721,6 +741,153 @@ class HyperVolume extends MonoVolume {
     segid = _this.renumbering.indexOf(segid);
     if (segid !== -1) {
       _this.segments[segid] = true;
+    }
+  }
+
+  /* getSegsInCircle
+   *
+   * Get the segids located within a circle. All
+   * parameters are normalized between [0, 1]
+   *
+   * Required:
+   *   d: 0..1, Diameter of the circle
+   *   cx: 0..1, X coordinate of circle center
+   *   cy: 0..1, Y coordinate of circle center
+   *
+   * Return: [ segids ]
+   */
+  getSegsInCircle (axis, slice, d, cx, cy) {
+    let _this = this;
+    let [ width, height ] = _this.segmentation.faceDimensions(axis);
+
+    // Nullify anything outside the ellipse. Just like a GRE problem.
+
+    let buffer = _this.segmentation.slice(axis, slice, /*copy=*/false);
+
+    cx = Math.floor(cx * width) + 0.5;
+    cy = Math.floor(cy * height) + 0.5;
+
+    let dx = d * width,
+      dy = d * height;
+
+    let rx = dx / 2,
+      rx2 = dx * dx / 4,
+      ry = dy / 2,
+      ry2 = dy * dy / 4;
+
+    let x0 = Math.max(0, Math.trunc(cx - rx) + 0.5),
+      xf = Math.min(width, Math.trunc(cx + rx) + 0.5),
+      y0 = Math.max(0, Math.trunc(cy - ry) + 0.5),
+      yf = Math.min(width, Math.trunc(cy + ry) + 0.5);
+
+    let segid = 0,
+      bounds_test = 0.0;
+
+    let segids = {};
+
+    // For anisotropic data, we need to distort our circle (UI) into an ellipse 
+    // since we've distorted the data to be square.
+    // eqn of an ellipse: ((x - h)^2 / rx^2) + ((y - k)^2 / ry^2) <= 1
+    // We'll use < instead of <= though to exclude the boundary
+
+    for (var x = x0; x <= xf; x++) {
+      for (var y = y0; y <= yf; y++) {
+        bounds_test = ((x - cx) * (x - cx) / rx2) + ((y - cy) * (y - cy) / ry2);
+        segid = ((bounds_test < 1) && buffer[(x|0) + width * (y|0)]) | 0;
+        segids[segid] = true;
+      }
+    }
+
+    delete segids[0];
+
+    return Object.keys(segids).map( (segid) => parseInt(segid, 10) );
+  }
+
+  selectSegsInCircle(axis, slice, d, cx, cy) {
+    let _this = this;
+    let segs = _this.getSegsInCircle(axis, slice, d, cx, cy);
+    segs.forEach((segid) => {
+      _this.segments[segid] = true;
+    });
+  }
+
+  eraseSegsInCircle(axis, slice, d, cx, cy) {
+    let _this = this;
+    let segs = _this.getSegsInCircle(axis, slice, d, cx, cy);
+    segs.forEach((segid) => {
+      _this.segments[segid] = false;
+    });
+  }
+
+  paintCircle(axis, slice, d, cx, cy, label) {
+    let _this = this;
+    let [ width, height ] = _this.segmentation.faceDimensions(axis);
+
+    if (_this.inverse_renumbering[label] === undefined) {
+      _this.renumbering[_this.max_label] = label;
+      _this.inverse_renumbering[label] = _this.max_label;
+      _this.assigned_colors[_this.max_label] = _this.colorToUint32({r:0,g:230,b:0}, 1);
+      _this.max_label++;
+    }
+    label = _this.inverse_renumbering[label];
+
+    cx = Math.floor(cx * width) + 0.5;
+    cy = Math.floor(cy * height) + 0.5;
+
+    let dx = d * width,
+      dy = d * height;
+
+    let rx = dx / 2,
+      rx2 = dx * dx / 4,
+      ry = dy / 2,
+      ry2 = dy * dy / 4;
+
+    let x0 = Math.max(0, Math.trunc(cx - rx) + 0.5),
+      xf = Math.min(width, Math.trunc(cx + rx) + 0.5),
+      y0 = Math.max(0, Math.trunc(cy - ry) + 0.5),
+      yf = Math.min(width, Math.trunc(cy + ry) + 0.5);
+
+    let segid = 0,
+      bounds_test = 0.0;
+
+    // For anisotropic data, we need to distort our circle (UI) into an ellipse 
+    // since we've distorted the data to be square.
+    // eqn of an ellipse: ((x - h)^2 / rx^2) + ((y - k)^2 / ry^2) <= 1
+    // We'll use < instead of <= though to exclude the boundary
+    let cube = _this.segmentation.cube;
+
+    if (axis == 'z') {
+      for (var y = y0; y <= yf; y++) {
+        for (var x = x0; x <= xf; x++) {
+          bounds_test = ((x - cx) * (x - cx) / rx2) + ((y - cy) * (y - cy) / ry2);
+          if (bounds_test < 1) {
+            cube[(x|0) + width * ((y|0) + height * (slice|0))] = label;
+          }
+        }
+      }
+    }
+    else if (axis == 'y') {
+      for (var z = y0; z <= yf; z++) {
+        for (var x = x0; x <= xf; x++) {
+          bounds_test = ((x - cx) * (x - cx) / rx2) + ((z - cy) * (z - cy) / ry2);
+          if (bounds_test < 1) {
+            cube[(x|0) + width * ((slice|0) + height * (z|0))] = label;
+          }
+        }
+      }
+    }
+    else if (axis === 'x') {
+      for (var z = y0; z <= yf; z++) {
+        for (var y = x0; y <= xf; y++) {
+          bounds_test = ((y - cx) * (y - cx) / rx2) + ((z - cy) * (z - cy) / ry2);
+          if (bounds_test < 1) {
+            cube[(slice|0) + width * ((y|0) + height * (z|0))] = label;
+          }
+        }
+      }
+    }
+    else {
+      throw new Error("Unsupported axis.")
     }
   }
 }
