@@ -110,7 +110,12 @@ def load(filename, shape, dtype, order):
 @click.option('--shape', type=Tuple234(), default=None, help="Set shape manually for memmaps.", show_default=True)
 @click.option('--dtype', type=str, default=None, help="Set dtype manually for memmaps.", show_default=True)
 @click.option('--order', type=str, default="F", help="Set order manually for memmaps.", show_default=True)
-def main(image, segmentation, seg, browser, shape, dtype, order):
+@click.option('--paint', is_flag=True, default=False, help="Create a blank segmentation for painting.", show_default=True)
+def main(
+  image, segmentation, 
+  seg, paint, browser, 
+  shape, dtype, order,
+):
   """
   View 3D images in the browser.
   """
@@ -124,6 +129,10 @@ def main(image, segmentation, seg, browser, shape, dtype, order):
   except FileNotFoundError as err:
     print(f"File not found: {err.filename}")
     return
+
+  if not segmentation and paint:
+    segmentation_np = np.zeros(image_np.shape, dtype=np.uint16, order="F")
+    segmentation = "PAINTING"
 
   if segmentation is not None:
     microviewer.hyperview(
