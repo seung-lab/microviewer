@@ -962,6 +962,22 @@
         requestAnimationFrame(loop);
       }
 
+      function saveNumpy (filename) {
+        let dc = vol.channel;
+        if (vol.segmentation) {
+          dc = vol.segmentation;
+        }
+        dc.saveNumpy(filename);
+      }
+
+      function saveCrackle (filename) {
+        let dc = vol.channel;
+        if (vol.segmentation) {
+          dc = vol.segmentation;
+        }
+        dc.saveCrackle(filename);
+      }
+
     </script>
   </head>
   <body>
@@ -1015,8 +1031,8 @@
         <p class="segmentation">SAVE</p>
 
         <div class="segmentation">
-          <button onclick="vol.channel.saveNumpy('image.npy')">.npy</button> 
-          <button onclick="vol.channel.saveCrackle('image.ckl')">.ckl</button>
+          <button onclick="saveNumpy('image.npy')">.npy</button> 
+          <button onclick="saveCrackle('image.ckl')">.ckl</button>
         </div>
 
         <p>CONTROLS</p>
