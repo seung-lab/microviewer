@@ -446,7 +446,7 @@ class SegmentationVolume extends MonoVolume {
     let x0 = Math.max(0, Math.trunc(cx - rx) + 0.5),
       xf = Math.min(width, Math.trunc(cx + rx) + 0.5),
       y0 = Math.max(0, Math.trunc(cy - ry) + 0.5),
-      yf = Math.min(width, Math.trunc(cy + ry) + 0.5);
+      yf = Math.min(height, Math.trunc(cy + ry) + 0.5);
 
     let segid = 0,
       bounds_test = 0.0;
@@ -456,13 +456,15 @@ class SegmentationVolume extends MonoVolume {
     // eqn of an ellipse: ((x - h)^2 / rx^2) + ((y - k)^2 / ry^2) <= 1
     // We'll use < instead of <= though to exclude the boundary
     let cube = _this.channel.cube;
+    const sx = _this.channel.size.x;
+    const sy = _this.channel.size.y;
 
     if (axis == 'z') {
       for (var y = y0; y <= yf; y++) {
         for (var x = x0; x <= xf; x++) {
           bounds_test = ((x - cx) * (x - cx) / rx2) + ((y - cy) * (y - cy) / ry2);
           if (bounds_test < 1) {
-            cube[(x|0) + width * ((y|0) + height * (slice|0))] = label;
+            cube[(x|0) + sx * ((y|0) + sy * (slice|0))] = label;
           }
         }
       }
@@ -472,7 +474,7 @@ class SegmentationVolume extends MonoVolume {
         for (var x = x0; x <= xf; x++) {
           bounds_test = ((x - cx) * (x - cx) / rx2) + ((z - cy) * (z - cy) / ry2);
           if (bounds_test < 1) {
-            cube[(x|0) + width * ((slice|0) + height * (z|0))] = label;
+            cube[(x|0) + sx * ((slice|0) + sy * (z|0))] = label;
           }
         }
       }
@@ -482,7 +484,7 @@ class SegmentationVolume extends MonoVolume {
         for (var y = x0; y <= xf; y++) {
           bounds_test = ((y - cx) * (y - cx) / rx2) + ((z - cy) * (z - cy) / ry2);
           if (bounds_test < 1) {
-            cube[(slice|0) + width * ((y|0) + height * (z|0))] = label;
+            cube[(slice|0) + sx * ((y|0) + sy * (z|0))] = label;
           }
         }
       }
