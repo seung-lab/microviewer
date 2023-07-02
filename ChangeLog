@@ -1,6 +1,13 @@
 CHANGES
 =======
 
+1.4.1
+-----
+
+* refactor: make HyperVolume a child class of SegmentationVolume
+* fix: painting was broken for rectangular images
+* fix: automatically select a new port if 8080 in use
+
 1.4.0
 -----
 

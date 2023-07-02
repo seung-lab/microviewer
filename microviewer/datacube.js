@@ -887,17 +887,27 @@ class DataCube {
   insertSquare (square, width, offsetx = 0, offsety = 0, offsetz = 0) {
     let _this = this;
 
-    const xsize = _this.size.x,
-      ysize = _this.size.y,
-      zsize = _this.size.z;
+    const sx = _this.size.x,
+      sy = _this.size.y,
+      sz = _this.size.z;
 
-    offsetz *= xsize * ysize;
-
-    for (let i = 0; i < square.length; i++) {
-      let x = offsetx + (i % width),
-        y = offsety + (Math.floor(i / width));
-
-      _this.cube[x + xsize * y + offsetz] = square[i];
+    let cube = _this.cube;
+    let ArrayType = this.arrayType();
+    
+    let sq = new ArrayType(square.buffer);
+    if (offsetx === 0 && offsety === 0) {
+      _this.cube.set(sq, sx * sy * offsetz);
+    }
+    else {
+      offsetz *= sx * sy;
+      let x = 0, y = 0;
+      for (let i = 0; i < sq.length; i++, x++) {
+        if (x === sx) {
+          x = 0;
+          y++;
+        }
+        cube[x + sx * y + offsetz] = sq[i];
+      }
     }
 
     _this.clean = false;
