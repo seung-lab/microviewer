@@ -279,8 +279,13 @@
       }
 
       function push_undo () {
-        let img2d = vol.getSegmentation().slice(AXIS, SLICE[AXIS], true);
-        UNDO_STACK.push([ 'paint', [ img2d, AXIS, SLICE[AXIS] ] ]);
+        if (elems.paintmode.prop("checked")) {
+          let img2d = vol.getSegmentation().slice(AXIS, SLICE[AXIS], true);
+          UNDO_STACK.push([ 'paint', [ img2d, AXIS, SLICE[AXIS] ] ]);
+        }
+        else {
+          UNDO_STACK.push([ 'select', [ structuredClone(vol.segments) ] ]);
+        }
       }
 
       function pop_undo () {
@@ -295,8 +300,11 @@
           vol.getSegmentation().insertSquare(
             img2d, axis, slice
           );
-          render(true);
         }
+        else {
+          vol.segments = args[0];
+        }
+        render(true);
       }
 
       function configure_segmentation_ui () {
@@ -401,16 +409,17 @@
               y = clamp(y, 0, 0.999999999); 
 
               if (evt.which === 1) {
+                push_undo();
                 vol.toggleSegment(AXIS, SLICE[AXIS], x, y);
               }
             })
             .on('mousedown', function (evt) {
               PAINTING_MODE = 1;
+              push_undo();
               if (BRUSH === 0) {
                 PAINT_MOVED = false;
                 return;
               }
-              push_undo();
               paint(evt);
               evt.stopPropagation();
             })
@@ -434,6 +443,7 @@
             .on('contextmenu', function (evt) {
               PAINTING_MODE = 2;
               PAINT_MOVED = false;
+              push_undo();
               erase(evt);
               evt.stopPropagation();
               evt.preventDefault();
@@ -727,6 +737,7 @@
           || evt.keyCode === 'x'.charCodeAt(0)) {
           
           if (vol.clearSelected) {
+            push_undo();
             vol.clearSelected()
           }
           render(true);
