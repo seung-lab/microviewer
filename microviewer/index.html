@@ -245,6 +245,8 @@
       var PAINTING_MODE = 0;
       var PAINT_MOVED = false;
 
+      var UNDO_STACK = [];
+
       let BRUSH_DIAMETERS = {
         0: 1, // px
         1: 25,
@@ -274,6 +276,27 @@
           bytes: num_bytes,
           size: size,
         });
+      }
+
+      function push_undo () {
+        let img2d = vol.getSegmentation().slice(AXIS, SLICE[AXIS], true);
+        UNDO_STACK.push([ 'paint', [ img2d, AXIS, SLICE[AXIS] ] ]);
+      }
+
+      function pop_undo () {
+        if (UNDO_STACK.length === 0) {
+          return;
+        }
+
+        let [ action, args ] = UNDO_STACK.pop();
+
+        if (action === 'paint') {
+          let [img2d, axis, slice] = args;
+          vol.getSegmentation().insertSquare(
+            img2d, axis, slice
+          );
+          render(true);
+        }
       }
 
       function configure_segmentation_ui () {
@@ -387,6 +410,7 @@
                 PAINT_MOVED = false;
                 return;
               }
+              push_undo();
               paint(evt);
               evt.stopPropagation();
             })
@@ -433,6 +457,7 @@
 
         vol.load('/channel', function (ratio) {
           render();
+          push_undo();
         }).then( () => render() );
 
         configure_segmentation_ui();
@@ -669,6 +694,11 @@
           BRUSH = Math.min(BRUSH + 1, 3);
           render(true);
         }
+        else if (
+          evt.keyCode === 'Z'.charCodeAt(0) && evt.ctrlKey
+        ) {
+          pop_undo();
+        }
       });
 
       $(document).on('keypress', function (evt) {
@@ -781,15 +811,23 @@
       });
 
       function rotate_axis(delta) {
+        if (PAINTING_MODE) {
+          push_undo();
+        }
+
         var index = (AXES.indexOf(AXIS) + delta) % AXES.length;
         AXIS = AXES[index];
         render();
       }
 
       function move_slice (delta) {
+        if (PAINTING_MODE) {
+          push_undo();
+        }
+
         SLICE[AXIS] += delta;
         SLICE[AXIS] = clamp(SLICE[AXIS], 0, SIZE[AXIS] - 1);
-        render();  
+        render();
       }
 
       function render_static () {
@@ -829,8 +867,6 @@
         elems.dtype.text( PARAMETERS.data_types.join("; ") );
         elems.resolution.text( PARAMETERS.resolution.join('x') );
         elems.shape.text( `<${SIZE.x}, ${SIZE.y}, ${SIZE.z}>` );
-
-
 
         let bytes = PARAMETERS["data_bytes"];
 

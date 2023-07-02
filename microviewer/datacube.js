@@ -884,7 +884,9 @@ class DataCube {
    *
    * Return: this
    */
-  insertSquare (square, width, offsetx = 0, offsety = 0, offsetz = 0) {
+  insertSquare (
+    square, axis, slice
+  ) {
     let _this = this;
 
     const sx = _this.size.x,
@@ -893,20 +895,26 @@ class DataCube {
 
     let cube = _this.cube;
     let ArrayType = this.arrayType();
-    
     let sq = new ArrayType(square.buffer);
-    if (offsetx === 0 && offsety === 0) {
-      _this.cube.set(sq, sx * sy * offsetz);
+
+    if (axis === 'z') {
+      cube.set(sq, sx * sy * slice);
     }
-    else {
-      offsetz *= sx * sy;
-      let x = 0, y = 0;
-      for (let i = 0; i < sq.length; i++, x++) {
-        if (x === sx) {
-          x = 0;
-          y++;
+    else if (axis === 'y') {
+      let i = 0;
+      for (let z = 0; z < sz; z++) {
+        // cube.set(sq, z * sx, sx);
+        for (let x = 0; x < sx; x++, i++) {
+          cube[x + sx * (slice + sy * z)] = sq[i];
         }
-        cube[x + sx * y + offsetz] = sq[i];
+      }
+    }
+    else if (axis === 'x') {
+      let i = 0;
+      for (let z = 0; z < sz; z++) {
+        for (let y = 0; y < sy; y++, i++) {
+          cube[slice + sx * (y + sy * z)] = sq[i];
+        }
       }
     }
 

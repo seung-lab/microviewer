@@ -50,8 +50,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-// exports.__esModule = true;
-// exports.decompressCrackle = exports.compressCrackle = void 0;
+var crackleWasmDataUrl = './libcrackle.wasm';
 var libraryEnv = {
     emscripten_notify_memory_growth: function () { },
     proc_exit: function (code) {
@@ -68,7 +67,7 @@ function loadCrackleModule() {
                     if (wasmModule !== null) {
                         return [2 /*return*/, wasmModule];
                     }
-                    return [4 /*yield*/, fetch("./libcrackle.wasm")];
+                    return [4 /*yield*/, fetch(crackleWasmDataUrl)];
                 case 1:
                     response = _a.sent();
                     return [4 /*yield*/, response.arrayBuffer()];
@@ -107,6 +106,20 @@ function readHeader(buffer) {
     var sz = bufview.getUint32(15, /*littleEndian=*/ true);
     return { sx: sx, sy: sy, sz: sz, dataWidth: dataWidth };
 }
+function arrayType(dataWidth) {
+    if (dataWidth === 1) {
+        return Uint8Array;
+    }
+    else if (dataWidth === 2) {
+        return Uint16Array;
+    }
+    else if (dataWidth === 4) {
+        return Uint32Array;
+    }
+    else if (dataWidth === 8) {
+        return BigUint64Array;
+    }
+}
 function compressCrackle(buffer, dataWidth, sx, sy, sz) {
     return __awaiter(this, void 0, void 0, function () {
         var m, bufPtr, streamPtr, heap, streamSize, stream;
@@ -144,10 +157,9 @@ function compressCrackle(buffer, dataWidth, sx, sy, sz) {
         });
     });
 }
-// exports.compressCrackle = compressCrackle;
 function decompressCrackle(buffer) {
     return __awaiter(this, void 0, void 0, function () {
-        var m, _a, sx, sy, sz, dataWidth, voxels, nbytes, bufPtr, imagePtr, heap, code, image;
+        var m, _a, sx, sy, sz, dataWidth, voxels, nbytes, bufPtr, imagePtr, heap, code, image, ArrayType;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0: return [4 /*yield*/, loadCrackleModule()];
@@ -171,7 +183,9 @@ function decompressCrackle(buffer) {
                         image = new Uint8Array(m.instance.exports.memory.buffer, imagePtr, nbytes);
                         // copy the array so it can be memory managed by JS
                         // and we can free the emscripten buffer
-                        return [2 /*return*/, image.slice(0)];
+                        image = image.slice(0);
+                        ArrayType = arrayType(dataWidth);
+                        return [2 /*return*/, new ArrayType(image.buffer)];
                     }
                     finally {
                         m.instance.exports.free(bufPtr);
@@ -182,4 +196,3 @@ function decompressCrackle(buffer) {
         });
     });
 }
-// exports.decompressCrackle = decompressCrackle;
