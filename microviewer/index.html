@@ -233,6 +233,157 @@
     </style>
 
     <script>
+      class CircularUndo {
+        constructor(n) {
+          this.buffer = [];
+          this.n = n;
+          for (let i = 0; i < this.n; i++) {
+            this.buffer.push(null);
+          }
+          this.index = 0;
+          this.offset = 0;
+          this.length = 0;
+          this.bottom = true;
+        }
+
+        incr () {
+          if (this.bottom) {
+            this.bottom = false;
+            if (this.length > 0) {
+              return;
+            }
+          }
+
+          if (this.length > 0) {
+            this.index++;
+          }
+          if (this.index === this.n) {
+            this.index = 0;
+          }
+
+          if (this.position() < this.length) {
+            return;
+          }
+
+          this.length++;
+          if (this.length > this.n) {
+            this.length = this.n;
+            this.offset++;
+            if (this.offset === this.n) {
+              this.offset = 0;
+            }
+          }
+        }
+
+        decr () {
+          if (this.length === 0) {
+            return;
+          }
+          else if (this.index === this.offset) {
+            this.bottom = true;
+            return;
+          }
+
+          this.index--;
+          if (this.index === -1) {
+            this.index = this.n - 1;
+          }
+        }
+
+        position () {
+          if (this.index === -1) {
+            return -1;
+          }
+          else if (this.offset <= this.index) {
+            return this.index - this.offset;
+          }
+          return this.index + (this.n - this.offset);
+        }
+
+        get () {
+          return this.buffer[this.index];
+        }
+
+        isDupe (item) {
+          let last = this.get();
+
+          if (last === null) {
+            return false;
+          }
+          else if (item[0] !== last[0]) {
+            return false;
+          }
+          else if (item[0] === 'select') {
+            return JSON.stringify(item[1][0]) == JSON.stringify(last[1][0]);
+          }
+          else {
+            let [arr1,axis1,slice1] = last[1];
+            let [arr2,axis2,slice2] = item[1];
+            if (axis1 !== axis2 || slice1 !== slice2) {
+              return false;
+            }
+
+            return arr1.every( (v,i) => v === arr2[i] );
+          }
+        }
+        
+        push () {
+          let item = null;
+          if (elems.paintmode.prop("checked")) {
+            let img2d = vol.getSegmentation().slice(AXIS, SLICE[AXIS], true);
+            item = [ 'paint', [ img2d, AXIS, SLICE[AXIS] ] ];
+          }
+          else {
+            item = [ 'select', [ structuredClone(vol.segments) ] ];
+          }
+
+          if (this.isDupe(item)) {
+            return;
+          }
+
+          this.incr();
+          this.buffer[this.index] = item;
+
+          if (this.position() < this.length - 1) {
+            this.length = this.position() + 1;
+          }
+        }
+
+        undo () {
+          if (this.bottom) {
+            return;
+          }
+          this.decr();
+          this.do();
+        }
+
+        redo () {
+          if (this.position() === this.length - 1) {
+            return;
+          }
+          this.incr();
+          this.do();
+        }
+
+        do () {
+          let cur = this.get();
+          if (cur === null) {
+            return;
+          }
+          let [ action, args ] = cur;
+          if (action === 'paint') {
+            let [img2d, axis, slice] = args;
+            vol.getSegmentation().insertSquare(
+              img2d, axis, slice
+            );
+          }
+          else {
+            vol.segments = args[0];
+          }
+          render(true);
+        }
+      }
+
       var AXIS = 'z';
       var SLICE = { x: 0, y: 0, z: 0 };
       var CLICK = { x: 0, y: 0, z: 0, pxvalue: [] };
@@ -244,8 +395,7 @@
       var BRUSH = 0;
       var PAINTING_MODE = 0;
       var PAINT_MOVED = false;
-
-      var UNDO_STACK = [];
+      var UNDO = new CircularUndo(250);
 
       let BRUSH_DIAMETERS = {
         0: 1, // px
@@ -276,35 +426,6 @@
           bytes: num_bytes,
           size: size,
         });
-      }
-
-      function push_undo () {
-        if (elems.paintmode.prop("checked")) {
-          let img2d = vol.getSegmentation().slice(AXIS, SLICE[AXIS], true);
-          UNDO_STACK.push([ 'paint', [ img2d, AXIS, SLICE[AXIS] ] ]);
-        }
-        else {
-          UNDO_STACK.push([ 'select', [ structuredClone(vol.segments) ] ]);
-        }
-      }
-
-      function pop_undo () {
-        if (UNDO_STACK.length === 0) {
-          return;
-        }
-
-        let [ action, args ] = UNDO_STACK.pop();
-
-        if (action === 'paint') {
-          let [img2d, axis, slice] = args;
-          vol.getSegmentation().insertSquare(
-            img2d, axis, slice
-          );
-        }
-        else {
-          vol.segments = args[0];
-        }
-        render(true);
       }
 
       function configure_segmentation_ui () {
@@ -409,13 +530,13 @@
               y = clamp(y, 0, 0.999999999); 
 
               if (evt.which === 1) {
-                push_undo();
+                UNDO.push();
                 vol.toggleSegment(AXIS, SLICE[AXIS], x, y);
               }
             })
             .on('mousedown', function (evt) {
               PAINTING_MODE = 1;
-              push_undo();
+              UNDO.push();
               if (BRUSH === 0) {
                 PAINT_MOVED = false;
                 return;
@@ -425,6 +546,7 @@
             })
             .on('mouseup', function (evt) {
               PAINTING_MODE = 0;
+              UNDO.push();
               render(true);
               evt.stopPropagation();
             })
@@ -443,7 +565,7 @@
             .on('contextmenu', function (evt) {
               PAINTING_MODE = 2;
               PAINT_MOVED = false;
-              push_undo();
+              UNDO.push();
               erase(evt);
               evt.stopPropagation();
               evt.preventDefault();
@@ -467,7 +589,7 @@
 
         vol.load('/channel', function (ratio) {
           render();
-          push_undo();
+          UNDO.push();
         }).then( () => render() );
 
         configure_segmentation_ui();
@@ -485,6 +607,7 @@
 
         vol.load(function (ratio) {
           render();
+          UNDO.push();
         }).then( () => render() );
 
         configure_segmentation_ui();
@@ -707,7 +830,12 @@
         else if (
           evt.keyCode === 'Z'.charCodeAt(0) && evt.ctrlKey
         ) {
-          pop_undo();
+          if (evt.shiftKey) {
+            UNDO.redo();
+          }
+          else {
+            UNDO.undo();
+          }
         }
       });
 
@@ -737,7 +865,7 @@
           || evt.keyCode === 'x'.charCodeAt(0)) {
           
           if (vol.clearSelected) {
-            push_undo();
+            UNDO.push();
             vol.clearSelected()
           }
           render(true);
@@ -823,7 +951,7 @@
 
       function rotate_axis(delta) {
         if (PAINTING_MODE) {
-          push_undo();
+          UNDO.push();
         }
 
         var index = (AXES.indexOf(AXIS) + delta) % AXES.length;
@@ -833,7 +961,7 @@
 
       function move_slice (delta) {
         if (PAINTING_MODE) {
-          push_undo();
+          UNDO.push();
         }
 
         SLICE[AXIS] += delta;
