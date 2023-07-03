@@ -28,7 +28,7 @@ Visualize 3D numpy arrays in your browser without difficult installation procedu
 - Grayscale images with segmentation overlay.
 - Segmentation selection with brush tools.
 - Direct voxel painting.
-- Save segmentation as .npy or [.ckl](https://github.com/seung-lab/crackle), an advanced compresssion format.
+- Save segmentation as [.npy](https://numpy.org/neps/nep-0001-npy-format.html) or [.ckl](https://github.com/seung-lab/crackle), an advanced compresssion format.
 - Undo/Redo
 
 ## Supports
