@@ -1,6 +1,18 @@
 CHANGES
 =======
 
+1.5.0
+-----
+
+* fix: undo/redo seemingly working now
+* feat: add date to file names
+* feat: adjust canvas dimensions on axis rotation
+* feat: add controls info about ctrl+z and ctrl+shift+z (undo/redo)
+* feat: not perfect, but partly working undo/redo function
+* feat: add segment selection to undo
+* feat: add undo for painting
+* fix: insertSquare can handle more data types
+
 1.4.1
 -----
 
