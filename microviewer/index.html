@@ -314,7 +314,7 @@
             return false;
           }
           else if (item[0] === 'select') {
-            return JSON.stringify(item[1][0]) == JSON.stringify(last[1][0]);
+            return JSON.stringify(item[1][0]) === JSON.stringify(last[1][0]);
           }
           else {
             let [arr1,axis1,slice1] = last[1];
@@ -378,7 +378,7 @@
             );
           }
           else {
-            vol.segments = args[0];
+            vol.segments = structuredClone(args[0]);
           }
           render(true);
         }
@@ -532,6 +532,7 @@
               if (evt.which === 1) {
                 UNDO.push();
                 vol.toggleSegment(AXIS, SLICE[AXIS], x, y);
+                UNDO.push();
               }
             })
             .on('mousedown', function (evt) {
