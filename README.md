@@ -22,6 +22,15 @@ uview labels.npy.gz --seg # view as segmentation
 
 Visualize 3D numpy arrays in your browser without difficult installation procedures or reformatting your data.  The code is CPU based and the image is uncompressed in memory. You're limited to images that are at most 2^31 bytes large (~2.1 GB) due to browser limitations.
 
+## Features
+
+- 3 axis visualization of 3D images.
+- Grayscale images with segmentation overlay.
+- Segmentation selection with brush tools.
+- Direct voxel painting.
+- Save segmentation as .npy or [.ckl](https://github.com/seung-lab/crackle), an advanced compresssion format.
+- Undo/Redo
+
 ## Supports
 
 - 8-bit grayscale 3D images
