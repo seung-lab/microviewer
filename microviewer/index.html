@@ -1168,20 +1168,16 @@
         requestAnimationFrame(loop);
       }
 
-      function saveNumpy (filename) {
-        let dc = vol.channel;
-        if (vol.segmentation) {
-          dc = vol.segmentation;
-        }
-        dc.saveNumpy(filename);
+      function saveNumpy () {
+        let d = new Date();
+        let filename = `image-${d.getFullYear()}-${d.getMonth()}-${d.getDay()}.npy`;
+        vol.getSegmentation().saveNumpy(filename);
       }
 
-      function saveCrackle (filename) {
-        let dc = vol.channel;
-        if (vol.segmentation) {
-          dc = vol.segmentation;
-        }
-        dc.saveCrackle(filename);
+      function saveCrackle () {
+        let d = new Date();
+        let filename = `image-${d.getFullYear()}-${d.getMonth()}-${d.getDay()}.ckl`;
+        vol.getSegmentation().saveCrackle(filename);
       }
 
     </script>
@@ -1239,8 +1235,8 @@
         <p class="segmentation">SAVE SEGMENTATION</p>
 
         <div class="segmentation">
-          <button onclick="saveNumpy('image.npy')" title="Save as a .npy file. Might be big depending on your image size!">.npy</button> 
-          <button onclick="saveCrackle('image.ckl')" title="Save as a small .ckl file. There will be some processing time. Read more at https://github.com/seung-lab/crackle.">.ckl</button>
+          <button id="save-numpy" onclick="saveNumpy()" title="Save as a .npy file. Might be big depending on your image size!">.npy</button> 
+          <button id="save-crackle" onclick="saveCrackle()" title="Save as a small .ckl file. There will be some processing time. Read more at https://github.com/seung-lab/crackle.">.ckl</button>
         </div>
 
         <p>CONTROLS</p>
