@@ -954,8 +954,14 @@
           UNDO.push();
         }
 
-        var index = (AXES.indexOf(AXIS) + delta) % AXES.length;
+        let index = (AXES.indexOf(AXIS) + delta) % AXES.length;
         AXIS = AXES[index];
+
+        let face_dims = vol.channel.faceDimensions(AXIS);
+
+        elems.channel.css("width", (face_dims[0] * MAGNIFICATION) + "px");
+        elems.channel.css("height", (face_dims[1] * MAGNIFICATION) + "px");
+
         render();
       }
 
@@ -1013,8 +1019,13 @@
           bytes = bytes.reduce((partialSum, a) => partialSum + a, 0);
         }
         bytes *= SIZE.x * SIZE.y * SIZE.z;
-        let megabytes = Math.floor(bytes / 1e6);
-        elems.memoryusage.text(`${megabytes}`);
+        let megabytes = bytes / 1e6;
+        if (megabytes < 1) {
+          elems.memoryusage.text(`${(megabytes * 1000)|0} kB`);
+        }
+        else {
+          elems.memoryusage.text(`${megabytes|0} MB`);
+        }
       }
 
       function update_pxvalue () {
@@ -1200,7 +1211,7 @@
           <br />
           resolution: <span id="resolution"></span> nm<sup>3</sup>
           <br />
-          memory: <span id="memory-usage"></span> MB
+          memory: <span id="memory-usage"></span>
         </div>
 
         <p class="segmentation">SELECTION VISIBILITY</p>
