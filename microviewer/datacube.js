@@ -360,7 +360,7 @@ class SegmentationVolume extends MonoVolume {
    *
    * Return: [ segids ]
    */
-  getSegsInCircle (axis, slice, d, cx, cy) {
+  getSegsInCircle (axis, slice, dx, dy, cx, cy) {
     let _this = this;
     let [ width, height ] = _this.getSegmentation().faceDimensions(axis);
 
@@ -371,8 +371,8 @@ class SegmentationVolume extends MonoVolume {
     cx = Math.floor(cx * width) + 0.5;
     cy = Math.floor(cy * height) + 0.5;
 
-    let dx = d * width,
-      dy = d * height;
+    dx *= width;
+    dy *= height;
 
     let rx = dx / 2,
       rx2 = dx * dx / 4,
@@ -407,23 +407,23 @@ class SegmentationVolume extends MonoVolume {
     return Object.keys(segids).map( (segid) => parseInt(segid, 10) );
   }
 
-  selectSegsInCircle(axis, slice, d, cx, cy) {
+  selectSegsInCircle(axis, slice, dx, dy, cx, cy) {
     let _this = this;
-    let segs = _this.getSegsInCircle(axis, slice, d, cx, cy);
+    let segs = _this.getSegsInCircle(axis, slice, dx, dy, cx, cy);
     segs.forEach((segid) => {
       _this.segments[segid] = true;
     });
   }
 
-  eraseSegsInCircle(axis, slice, d, cx, cy) {
+  eraseSegsInCircle(axis, slice, dx, dy, cx, cy) {
     let _this = this;
-    let segs = _this.getSegsInCircle(axis, slice, d, cx, cy);
+    let segs = _this.getSegsInCircle(axis, slice, dx, dy, cx, cy);
     segs.forEach((segid) => {
       _this.segments[segid] = false;
     });
   }
 
-  paintCircle(axis, slice, d, cx, cy, label) {
+  paintCircle(axis, slice, dx, dy, cx, cy, label) {
     let _this = this;
     let [ width, height ] = _this.getSegmentation().faceDimensions(axis);
 
@@ -439,8 +439,8 @@ class SegmentationVolume extends MonoVolume {
     cx = Math.floor(cx * width) + 0.5;
     cy = Math.floor(cy * height) + 0.5;
 
-    let dx = d * width,
-      dy = d * height;
+    dx *= width;
+    dy *= height;
 
     let rx = dx / 2,
       rx2 = dx * dx / 4,
