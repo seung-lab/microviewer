@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.6.1
+-----
+
+* perf: faster color assignment and rendering
+
 1.6.0
 -----
 
