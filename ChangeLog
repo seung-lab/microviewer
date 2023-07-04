@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+1.6.0
+-----
+
+* feat: adds invert selection
+* docs: numpy format link
+* docs: add feature highlights
+* docs: update demo image
+
 1.5.0
 -----
 

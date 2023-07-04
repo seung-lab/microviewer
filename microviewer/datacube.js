@@ -27,26 +27,7 @@ class MonoVolume {
   }
 
   initializeColorAssignments (cube) {
-    let assignments = {};
-    let last;
-
-    if (cube.length) {
-      last = cube[0];
-      assignments[cube[0]] = 0;
-    }
-
-    for (let i = cube.length - 1; i >= 0; i--) {
-      if (cube[i] == last) {
-        continue;
-      }
-
-      assignments[cube[i]] = 0;
-      last = cube[i];
-    }
-
-    assignments[0] = 0;
-
-    this.assigned_colors = assignments;
+    this.assigned_colors = new Uint32Array(this.renumbering.length);
     this.shuffleColors();
   }
 
