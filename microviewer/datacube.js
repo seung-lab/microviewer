@@ -179,6 +179,25 @@ class SegmentationVolume extends MonoVolume {
       .map( (segid) => _this.renumbering[segid] );
   }
 
+  getInvertedSelection () {
+    let _this = this;
+    let new_selection = {};
+    for (let i = _this.renumbering.length - 1; i >= 0; i--) {
+      let segid = _this.renumbering[i];
+      if (segid === 0) {
+        continue;
+      }
+      else if (!_this.segments[i]) {
+        new_selection[i] = true;
+      }
+    }
+    return new_selection;
+  }
+
+  invertSelection () {
+    this.segments = this.getInvertedSelection();
+  }
+
   get(x,y,z) {
     return this.renumbering[this.channel.get(x,y,z)];
   }
