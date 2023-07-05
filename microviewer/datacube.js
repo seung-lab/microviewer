@@ -384,7 +384,8 @@ class SegmentationVolume extends MonoVolume {
       y0 = Math.max(0, Math.trunc(cy - ry) + 0.5),
       yf = Math.min(width, Math.trunc(cy + ry) + 0.5);
 
-    let segid = 0,
+    const ZERO = _this.getSegmentation().cast(0); 
+    let segid = ZERO,
       bounds_test = 0.0;
 
     let segids = {};
@@ -397,8 +398,10 @@ class SegmentationVolume extends MonoVolume {
     for (var x = x0; x <= xf; x++) {
       for (var y = y0; y <= yf; y++) {
         bounds_test = ((x - cx) * (x - cx) / rx2) + ((y - cy) * (y - cy) / ry2);
-        segid = ((bounds_test < 1) && buffer[(x|0) + width * (y|0)]) | 0;
-        segids[segid] = true;
+        if (bounds_test < 1) {
+          segid = buffer[(x|0) + width * (y|0)] | ZERO;
+          segids[segid] = true;
+        }
       }
     }
 
@@ -452,7 +455,7 @@ class SegmentationVolume extends MonoVolume {
       y0 = Math.max(0, Math.trunc(cy - ry) + 0.5),
       yf = Math.min(height, Math.trunc(cy + ry) + 0.5);
 
-    let segid = 0,
+    let segid = _this.getSegmentation().cast(0),
       bounds_test = 0.0;
 
     // For anisotropic data, we need to distort our circle (UI) into an ellipse 

@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+1.6.2
+-----
+
+* fix: brushes are circular on rectangular images
+* fix: use pixelated image rendering in chrome
+
 1.6.1
 -----
 
