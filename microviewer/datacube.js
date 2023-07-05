@@ -430,6 +430,8 @@ class SegmentationVolume extends MonoVolume {
     let _this = this;
     let [ width, height ] = _this.getSegmentation().faceDimensions(axis);
 
+    label = _this.getSegmentation().cast(label);
+
     if (_this.inverse_renumbering[label] === undefined) {
       _this.renumbering[_this.max_label] = label;
       _this.inverse_renumbering[label] = _this.max_label;
