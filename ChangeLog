@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+1.6.3
+-----
+
+* fix: paint uint64 arrays
+* fix: select segments on uint64 arrays
+
 1.6.2
 -----
 

@@ -534,6 +534,7 @@ class HyperVolume extends SegmentationVolume {
 
     this.segments = {};
     this.alpha = 0.5;
+    this.hide_segmentation = false;
   }
 
   get(x,y,z) {
@@ -625,8 +626,13 @@ class HyperVolume extends SegmentationVolume {
     let _this = this;
 
     let pixels = _this.channel.grayImageSlice(axis, slice, /*transparency=*/false, /*copy=*/false);
-    let pixels32 = new Uint32Array(pixels.data.buffer); // creates a view, not an array
 
+    if (_this.hide_segmentation) {
+      ctx.putImageData(pixels, 0, 0);
+      return;
+    }
+
+    let pixels32 = new Uint32Array(pixels.data.buffer); // creates a view, not an array
     let segmentation = _this.segmentation.slice(axis, slice, /*copy=*/false);
 
     let x, y, segid;
