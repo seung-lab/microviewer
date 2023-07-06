@@ -730,7 +730,7 @@
 
           if (data.viewtype === "hyper") {
             $(document).on('keydown', function (evt) {
-              if (evt.keyCode === 16) {
+              if (evt.keyCode === 16 && !evt.ctrlKey) {
                 if (evt.originalEvent.code === "ShiftRight") {
                   vol.hide_channel = true;
                 }
@@ -742,7 +742,7 @@
             });
 
             $(document).on('keyup', function (evt) {
-              if (evt.keyCode === 16) {
+              if (evt.keyCode === 16 && !evt.ctrlKey) {
                 if (evt.originalEvent.code === "ShiftRight") {
                   vol.hide_channel = false;
                 }
