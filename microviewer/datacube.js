@@ -534,6 +534,7 @@ class HyperVolume extends SegmentationVolume {
 
     this.segments = {};
     this.alpha = 0.5;
+    this.hide_channel = false;
     this.hide_segmentation = false;
   }
 
@@ -625,10 +626,22 @@ class HyperVolume extends SegmentationVolume {
   render (ctx, axis, slice) {
     let _this = this;
 
-    let pixels = _this.channel.grayImageSlice(axis, slice, /*transparency=*/false, /*copy=*/false);
+    let pixels;
+    let alpha = this.alpha;
+    let ialpha = 1 - alpha;
+
+    if (!_this.hide_channel) {
+      pixels = _this.channel.grayImageSlice(axis, slice, /*transparency=*/false, /*copy=*/false);
+      ctx.putImageData(pixels, 0, 0);
+    }
+    else {
+      let sizes = _this.channel.faceDimensions(axis);
+      pixels = _this.channel.canvas_context.createImageData(sizes[0], sizes[1]);
+      alpha = 1;
+      ialpha = 0;
+    }
 
     if (_this.hide_segmentation) {
-      ctx.putImageData(pixels, 0, 0);
       return;
     }
 
@@ -638,8 +651,6 @@ class HyperVolume extends SegmentationVolume {
     let x, y, segid;
 
     const color_assignments = this.assigned_colors;
-    const alpha = this.alpha;
-    const ialpha = 1 - alpha;
 
     let masks = _this.segmentation.getRenderMaskSet();
     masks = Uint32Array.of(masks.r, masks.g, masks.b);

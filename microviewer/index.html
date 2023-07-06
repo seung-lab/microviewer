@@ -731,14 +731,24 @@
           if (data.viewtype === "hyper") {
             $(document).on('keydown', function (evt) {
               if (evt.keyCode === 16) {
-                vol.hide_segmentation = true;
+                if (evt.originalEvent.code === "ShiftRight") {
+                  vol.hide_channel = true;
+                }
+                else {
+                  vol.hide_segmentation = true;
+                }
                 render(true);
               }
             });
 
             $(document).on('keyup', function (evt) {
               if (evt.keyCode === 16) {
-                vol.hide_segmentation = false;
+                if (evt.originalEvent.code === "ShiftRight") {
+                  vol.hide_channel = false;
+                }
+                else {
+                  vol.hide_segmentation = false;
+                }
                 render(true);
               }
             });
@@ -1294,7 +1304,8 @@
           <li>Left Click - <span class="segmentation">paint, </span>freeze info about current pixel</li>
           <li class="segmentation">Right Click - erase</li>
           <li class="segmentation">X - clear selected segments</li>
-          <li class="hyperview">shift - hide segmentation</li>
+          <li class="hyperview">left shift - hide segmentation</li>
+          <li class="hyperview">right shift - hide channel</li>
           <li class="hyperview">+/- increase, decrease opacity</li>
           <li class='segmentation'>H - toggle hover highlight</li>
           <li class='segmentation'>U - toggle show unselected</li>
