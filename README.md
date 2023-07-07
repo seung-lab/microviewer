@@ -16,6 +16,8 @@ hyperview(image, labels) # interactive overlay
 ```bash
 uview image.npy.gz # view as image
 uview labels.npy.gz --seg # view as segmentation
+uview image.npy.gz labels.npy.gz # view image w/ overlay
+uview image.npy.gz --paint # view image w/ blank overlay
 ```
 
 ![Segmentation display in microviewer](seg-demo.png "Segmentation display in microviewer.")
