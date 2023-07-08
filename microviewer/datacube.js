@@ -502,6 +502,49 @@ class SegmentationVolume extends MonoVolume {
       throw new Error("Unsupported axis.")
     }
   }
+
+  destructivelyMergeSelection () {
+    let segments = this.segments;
+    let segarray = new Uint8Array(this.renumbering.length);
+    let min_label = 9999999999;
+    Object.keys(segments).forEach((label) => {
+      let label_i = parseInt(label);
+      segarray[label_i] = !!segments[label];
+      if (label_i < min_label) {
+        min_label = label_i;
+      }
+    });
+
+    let cube = this.getSegmentation().cube;
+    for (let i = cube.length - 1; i >= 0; i--) {
+      if (segarray[cube[i]]) {
+        cube[i] = min_label;
+      }
+    }
+
+    for (let i = 0; i < segarray.length; i++) {
+      if (segarray[i]) {
+        delete segments[`${i}`];
+      }
+    }
+    segments[`${min_label}`] = true;
+  }
+
+  destructivelyEraseSelection () {
+    let segments = this.segments;
+    let segarray = new Uint8Array(this.renumbering.length);
+    Object.keys(segments).forEach((label) => {
+      segarray[label] = !!segments[label];
+      segments[label] = false;
+    });
+    let cube = this.getSegmentation().cube;
+
+    for (let i = cube.length - 1; i >= 0; i--) {
+      if (segarray[cube[i]]) {
+        cube[i] = 0;
+      }
+    }
+  }
 }
 
 /* HyperVolume
