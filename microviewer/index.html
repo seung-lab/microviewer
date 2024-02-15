@@ -1,1326 +1,1338 @@
 <!doctype html>
 <html>
-  <head>
-    <title>μViewer</title>
-    <script src="./jquery-3.7.0.min.js"></script>
-    <script src="./crackle.js"></script>
-    <script src="./datacube.js"></script>
-    <meta charset="utf-8">
 
-    <link rel="preload" as="image" href="./cursors/exact.png">
-    <link rel="preload" as="image" href="./cursors/small.png">
-    <link rel="preload" as="image" href="./cursors/medium.png">
-    <link rel="preload" as="image" href="./cursors/large.png">
-    <link rel="preload" as="image" href="./cursors/exact-active.png">
-    <link rel="preload" as="image" href="./cursors/small-active.png">
-    <link rel="preload" as="image" href="./cursors/medium-active.png">
+<head>
+  <title>μViewer</title>
+  <script src="./jquery-3.7.0.min.js"></script>
+  <script src="./crackle.js"></script>
+  <script src="./datacube.js"></script>
+  <meta charset="utf-8">
 
-    <style>
-      html {
-        overflow: hidden;
-      }
+  <link rel="preload" as="image" href="./cursors/exact.png">
+  <link rel="preload" as="image" href="./cursors/small.png">
+  <link rel="preload" as="image" href="./cursors/medium.png">
+  <link rel="preload" as="image" href="./cursors/large.png">
+  <link rel="preload" as="image" href="./cursors/exact-active.png">
+  <link rel="preload" as="image" href="./cursors/small-active.png">
+  <link rel="preload" as="image" href="./cursors/medium-active.png">
 
-      body {
-        font-family: monospace;
-        color: white;
-        background: #0d0d0d;
-      }
+  <style>
+    html {
+      overflow: hidden;
+    }
 
-      #infobar {
-        margin-bottom: 10px;
-      }
+    body {
+      font-family: monospace;
+      color: white;
+      background: #0d0d0d;
+    }
 
-      #brush-tools {
-        display: flex;
-        justify-content: left;
-      }
+    #infobar {
+      margin-bottom: 10px;
+    }
 
-      #invert-selection {
-        margin-left: 5px;
-      }
+    #brush-tools {
+      display: flex;
+      justify-content: left;
+    }
 
-      #brush-size {
-        height: 35px;
-        
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-around;
-        width: 150px;
+    #invert-selection {
+      margin-left: 5px;
+    }
 
-        border: 1px solid #4a4a4a;
-        padding: 10px;
-      }
+    #brush-size {
+      height: 35px;
 
-      #brush-size div {
-        border-radius: 50%;
-        background-color: white;
-        width: 20px;
-        height: 20px;
-        transition: background-color .4s ease;
-        cursor: pointer;
-      }
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-around;
+      width: 150px;
 
-      #brush-size div:hover {
-        background-color: #add9c8;
-      }
+      border: 1px solid #4a4a4a;
+      padding: 10px;
+    }
 
-      #brush-size div:first-child {
-        width: 10px;
-        height: 10px;
-      }
+    #brush-size div {
+      border-radius: 50%;
+      background-color: white;
+      width: 20px;
+      height: 20px;
+      transition: background-color .4s ease;
+      cursor: pointer;
+    }
 
-      #brush-size div:nth-child(2) {
-        width: 17px;
-        height: 17px;
-      }
+    #brush-size div:hover {
+      background-color: #add9c8;
+    }
 
-      #brush-size div:nth-child(3) {
-        width: 24px;
-        height: 24px;
-      }
+    #brush-size div:first-child {
+      width: 10px;
+      height: 10px;
+    }
 
-      #brush-size div:last-child {
-        width: 30px;
-        height: 30px;
-      }
+    #brush-size div:nth-child(2) {
+      width: 17px;
+      height: 17px;
+    }
 
-      #brush-size.exact div:first-child,  
-      #brush-size.small div:nth-child(2),
-      #brush-size.medium div:nth-child(3),
-      #brush-size.large div:nth-child(4)
-      {
-        background-color: #80d0b2;
-      }
+    #brush-size div:nth-child(3) {
+      width: 24px;
+      height: 24px;
+    }
 
-      #right-sidebar {
-        position: fixed;
-        top: 0px;
-        right: 0px;
-        z-index: 20;
+    #brush-size div:last-child {
+      width: 30px;
+      height: 30px;
+    }
 
-        background-color: #1a1a1a;
-        height: 100vh;
-        width: 500px;
-        padding-left: 20px;
+    #brush-size.exact div:first-child,
+    #brush-size.small div:nth-child(2),
+    #brush-size.medium div:nth-child(3),
+    #brush-size.large div:nth-child(4) {
+      background-color: #80d0b2;
+    }
 
-        transition: right .4s ease;
+    #right-sidebar {
+      position: fixed;
+      top: 0px;
+      right: 0px;
+      z-index: 20;
 
-        border-left: 1px solid #4a4a4a;
-        box-sizing: border-box;
-        overflow-y: auto;
-      }
+      background-color: #1a1a1a;
+      height: 100vh;
+      width: 500px;
+      padding-left: 20px;
 
-      #right-sidebar.hidden {
-        right: -500px;
-      }
+      transition: right .4s ease;
 
-      #show-sidebar {
-        position: fixed;
-        top: 10px;
-        right: 510px;
+      border-left: 1px solid #4a4a4a;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
 
-        background-color: #eee;
-        z-index: 30;
+    #right-sidebar.hidden {
+      right: -500px;
+    }
 
-        width: 60px;
-        height: 60px;
+    #show-sidebar {
+      position: fixed;
+      top: 10px;
+      right: 510px;
 
-        display: flex;
-        justify-content: center;
-        box-sizing: border-box;
-        flex-direction: column;
-        border-radius: 50%;
+      background-color: #eee;
+      z-index: 30;
 
-        cursor: pointer;
-        transition: right .4s ease;
-      }
+      width: 60px;
+      height: 60px;
 
-      #show-sidebar.hidden {
-        right:15px;
-      }
+      display: flex;
+      justify-content: center;
+      box-sizing: border-box;
+      flex-direction: column;
+      border-radius: 50%;
 
-      #show-sidebar:hover {
-        background-color: white;
-      }
+      cursor: pointer;
+      transition: right .4s ease;
+    }
 
-      #show-sidebar:active {
-        background-color: #ccc;
-      }
+    #show-sidebar.hidden {
+      right: 15px;
+    }
 
-      #show-sidebar hr {
-        width: 25px;
-        height: 1px;
-        background-color: black;
-        border-color: black;
-      }
+    #show-sidebar:hover {
+      background-color: white;
+    }
 
-      #show-sidebar hr:first-child {
-        position: relative;
-        top: 6px;
-      }
+    #show-sidebar:active {
+      background-color: #ccc;
+    }
 
-      #show-sidebar hr:last-child {
-        position: relative;
-        bottom: 6px;
-      }
+    #show-sidebar hr {
+      width: 25px;
+      height: 1px;
+      background-color: black;
+      border-color: black;
+    }
 
-      #basic-info {
-        margin-top: 10px;
-      }
+    #show-sidebar hr:first-child {
+      position: relative;
+      top: 6px;
+    }
 
-      #instructions {
-        position: relative;
-        z-index: 0;
+    #show-sidebar hr:last-child {
+      position: relative;
+      bottom: 6px;
+    }
 
-        width: 450px;
-      }
+    #basic-info {
+      margin-top: 10px;
+    }
 
-      img {
-        margin: 1px;
-      }
+    #instructions {
+      position: relative;
+      z-index: 0;
 
-      #addsegs {
-        width: 420px;
-        height: 10ex;
+      width: 450px;
+    }
 
-        margin-top: 15px;
-      }
+    img {
+      margin: 1px;
+    }
 
-      #selected_segments {
-        max-height: 200px;
-        overflow-y: scroll;
-        background-color: #4a4a4a;
-        padding: 1em;
-        width: 400px;
-      }
+    #addsegs {
+      width: 420px;
+      height: 10ex;
 
-      canvas {
-        position: relative;
-        border: 1px dotted white;
-        max-width: calc(100vw - 20px);
-        max-height: calc(100vh - 100px);
-        background: #0d0d0d;
-        z-index: 10;
+      margin-top: 15px;
+    }
 
-        image-rendering: crisp-edges;
-        image-rendering: pixelated; /* chrome  */
-        transition: transform .4s ease,bottom .4s ease,left .4s ease;
-        cursor: crosshair;
-      }
+    #selected_segments {
+      max-height: 200px;
+      overflow-y: scroll;
+      background-color: #4a4a4a;
+      padding: 1em;
+      width: 400px;
+    }
 
-      canvas.paintable.exact {
-        cursor: url("./cursors/exact.png") 20 20.5, crosshair;
-      }
+    canvas {
+      position: relative;
+      border: 1px dotted white;
+      max-width: calc(100vw - 20px);
+      max-height: calc(100vh - 100px);
+      background: #0d0d0d;
+      z-index: 10;
 
-      canvas.paintable.exact:active {
-        cursor: url("./cursors/exact-active.png") 20 20.5, crosshair; /* F7EDCE, color of active state */
-      }
+      image-rendering: crisp-edges;
+      image-rendering: pixelated;
+      /* chrome  */
+      transition: transform .4s ease, bottom .4s ease, left .4s ease;
+      cursor: crosshair;
+    }
 
-      canvas.paintable.small {
-        cursor: url("./cursors/small.png") 16 16, crosshair
-      }
+    canvas.paintable.exact {
+      cursor: url("./cursors/exact.png") 20 20.5, crosshair;
+    }
 
-      canvas.paintable.small:active {
-        cursor: url("./cursors/small-active.png") 16 16, crosshair
-      }
+    canvas.paintable.exact:active {
+      cursor: url("./cursors/exact-active.png") 20 20.5, crosshair;
+      /* F7EDCE, color of active state */
+    }
 
-      canvas.paintable.medium {
-        cursor: url("./cursors/medium.png") 28.5 28.5, crosshair
-      }
+    canvas.paintable.small {
+      cursor: url("./cursors/small.png") 16 16, crosshair
+    }
 
-      canvas.paintable.medium:active {
-        cursor: url("./cursors/medium-active.png") 28.5 28.5, crosshair
-      }
+    canvas.paintable.small:active {
+      cursor: url("./cursors/small-active.png") 16 16, crosshair
+    }
 
-      canvas.paintable.large {
-        cursor: url("./cursors/large.png") 53.5 53.5, crosshair
-      }
+    canvas.paintable.medium {
+      cursor: url("./cursors/medium.png") 28.5 28.5, crosshair
+    }
 
-      canvas.paintable.large:active {
-        cursor: url("./cursors/large-active.png") 53.5 53.5, crosshair
-      }
-    </style>
+    canvas.paintable.medium:active {
+      cursor: url("./cursors/medium-active.png") 28.5 28.5, crosshair
+    }
 
-    <script>
-      class CircularUndo {
-        constructor(n) {
-          this.buffer = [];
-          this.n = n;
-          for (let i = 0; i < this.n; i++) {
-            this.buffer.push(null);
-          }
-          this.index = 0;
-          this.offset = 0;
-          this.length = 0;
-          this.bottom = true;
+    canvas.paintable.large {
+      cursor: url("./cursors/large.png") 53.5 53.5, crosshair
+    }
+
+    canvas.paintable.large:active {
+      cursor: url("./cursors/large-active.png") 53.5 53.5, crosshair
+    }
+  </style>
+
+  <script>
+    class CircularUndo {
+      constructor(n) {
+        this.buffer = [];
+        this.n = n;
+        for (let i = 0; i < this.n; i++) {
+          this.buffer.push(null);
         }
+        this.index = 0;
+        this.offset = 0;
+        this.length = 0;
+        this.bottom = true;
+      }
 
-        incr () {
-          if (this.bottom) {
-            this.bottom = false;
-            if (this.length > 0) {
-              return;
-            }
-          }
-
+      incr() {
+        if (this.bottom) {
+          this.bottom = false;
           if (this.length > 0) {
-            this.index++;
-          }
-          if (this.index === this.n) {
-            this.index = 0;
-          }
-
-          if (this.position() < this.length) {
             return;
           }
-
-          this.length++;
-          if (this.length > this.n) {
-            this.length = this.n;
-            this.offset++;
-            if (this.offset === this.n) {
-              this.offset = 0;
-            }
-          }
         }
 
-        decr () {
-          if (this.length === 0) {
-            return;
-          }
-          else if (this.index === this.offset) {
-            this.bottom = true;
-            return;
-          }
-
-          this.index--;
-          if (this.index === -1) {
-            this.index = this.n - 1;
-          }
+        if (this.length > 0) {
+          this.index++;
+        }
+        if (this.index === this.n) {
+          this.index = 0;
         }
 
-        position () {
-          if (this.index === -1) {
-            return -1;
-          }
-          else if (this.offset <= this.index) {
-            return this.index - this.offset;
-          }
-          return this.index + (this.n - this.offset);
+        if (this.position() < this.length) {
+          return;
         }
 
-        get () {
-          return this.buffer[this.index];
-        }
-
-        isDupe (item) {
-          let last = this.get();
-
-          if (last === null) {
-            return false;
+        this.length++;
+        if (this.length > this.n) {
+          this.length = this.n;
+          this.offset++;
+          if (this.offset === this.n) {
+            this.offset = 0;
           }
-          else if (item[0] !== last[0]) {
-            return false;
-          }
-          else if (item[0] === 'select') {
-            return JSON.stringify(item[1][0]) === JSON.stringify(last[1][0]);
-          }
-          else {
-            let [arr1,axis1,slice1] = last[1];
-            let [arr2,axis2,slice2] = item[1];
-            if (axis1 !== axis2 || slice1 !== slice2) {
-              return false;
-            }
-
-            return arr1.every( (v,i) => v === arr2[i] );
-          }
-        }
-        
-        push (action) {
-          let item = null;
-          if (
-            (action === undefined && elems.paintmode.prop("checked"))
-            || (action === 'paint')
-          ) {
-            let img2d = vol.getSegmentation().slice(AXIS, SLICE[AXIS], true);
-            item = [ 'paint', [ img2d, AXIS, SLICE[AXIS] ] ];
-          }
-          else {
-            item = [ 'select', [ structuredClone(vol.segments) ] ];
-          }
-
-          if (this.isDupe(item)) {
-            return;
-          }
-
-          this.incr();
-          this.buffer[this.index] = item;
-
-          if (this.position() < this.length - 1) {
-            this.length = this.position() + 1;
-          }
-        }
-
-        undo () {
-          if (this.bottom) {
-            return;
-          }
-          this.decr();
-          this.do();
-        }
-
-        redo () {
-          if (this.position() === this.length - 1) {
-            return;
-          }
-          this.incr();
-          this.do();
-        }
-
-        do () {
-          let cur = this.get();
-          if (cur === null) {
-            return;
-          }
-          let [ action, args ] = cur;
-          if (action === 'paint') {
-            let [img2d, axis, slice] = args;
-            vol.getSegmentation().insertSquare(
-              img2d, axis, slice
-            );
-          }
-          else {
-            vol.segments = structuredClone(args[0]);
-          }
-          render(true);
         }
       }
 
-      var AXIS = 'z';
-      var SLICE = { x: 0, y: 0, z: 0 };
-      var CLICK = { x: 0, y: 0, z: 0, pxvalue: [] };
-      var SIZE = {};
-      var PARAMETERS = {};
-      var PXVALUE = [];
-      var MOUSE_OVER_IMAGE = false;
-      var MAGNIFICATION = 1;
-      var BRUSH = 0;
-      var PAINTING_MODE = 0;
-      var PAINT_MOVED = false;
-      var UNDO = new CircularUndo(250);
-
-      let BRUSH_DIAMETERS = {
-        0: 1, // px
-        1: 25,
-        2: 50,
-        3: 100,
-      };
-
-      var elems; 
-      var _needsrender = true;
-
-      function create_datacube(dtype, num_bytes, size) {
-        let floating = dtype === 'float32' || dtype == 'float64';
-
-        if (floating) {
-          return new FloatingPointDataCube({
-            bytes: num_bytes,
-            size: size,
-          });
+      decr() {
+        if (this.length === 0) {
+          return;
         }
-        else if (dtype == 'bool') {
-          return new BooleanDataCube({
-            size: size,
-          });
+        else if (this.index === this.offset) {
+          this.bottom = true;
+          return;
         }
 
-        return new DataCube({
+        this.index--;
+        if (this.index === -1) {
+          this.index = this.n - 1;
+        }
+      }
+
+      position() {
+        if (this.index === -1) {
+          return -1;
+        }
+        else if (this.offset <= this.index) {
+          return this.index - this.offset;
+        }
+        return this.index + (this.n - this.offset);
+      }
+
+      get() {
+        return this.buffer[this.index];
+      }
+
+      isDupe(item) {
+        let last = this.get();
+
+        if (last === null) {
+          return false;
+        }
+        else if (item[0] !== last[0]) {
+          return false;
+        }
+        else if (item[0] === 'select') {
+          return JSON.stringify(item[1][0]) === JSON.stringify(last[1][0]);
+        }
+        else {
+          let [arr1, axis1, slice1] = last[1];
+          let [arr2, axis2, slice2] = item[1];
+          if (axis1 !== axis2 || slice1 !== slice2) {
+            return false;
+          }
+
+          return arr1.every((v, i) => v === arr2[i]);
+        }
+      }
+
+      push(action) {
+        let item = null;
+        if (
+          (action === undefined && elems.paintmode.prop("checked"))
+          || (action === 'paint')
+        ) {
+          let img2d = vol.getSegmentation().slice(AXIS, SLICE[AXIS], true);
+          item = ['paint', [img2d, AXIS, SLICE[AXIS]]];
+        }
+        else {
+          item = ['select', [structuredClone(vol.segments)]];
+        }
+
+        if (this.isDupe(item)) {
+          return;
+        }
+
+        this.incr();
+        this.buffer[this.index] = item;
+
+        if (this.position() < this.length - 1) {
+          this.length = this.position() + 1;
+        }
+      }
+
+      undo() {
+        if (this.bottom) {
+          return;
+        }
+        this.decr();
+        this.do();
+      }
+
+      redo() {
+        if (this.position() === this.length - 1) {
+          return;
+        }
+        this.incr();
+        this.do();
+      }
+
+      do() {
+        let cur = this.get();
+        if (cur === null) {
+          return;
+        }
+        let [action, args] = cur;
+        if (action === 'paint') {
+          let [img2d, axis, slice] = args;
+          vol.getSegmentation().insertSquare(
+            img2d, axis, slice
+          );
+        }
+        else {
+          vol.segments = structuredClone(args[0]);
+        }
+        render(true);
+      }
+    }
+
+    var AXIS = 'z';
+    var SLICE = { x: 0, y: 0, z: 0 };
+    var CLICK = { x: 0, y: 0, z: 0, pxvalue: [] };
+    var SIZE = {};
+    var PARAMETERS = {};
+    var PXVALUE = [];
+    var MOUSE_OVER_IMAGE = false;
+    var MAGNIFICATION = 1;
+    var BRUSH = 0;
+    var PAINTING_MODE = 0;
+    var PAINT_MOVED = false;
+    var UNDO = new CircularUndo(250);
+
+    let BRUSH_DIAMETERS = {
+      0: 1, // px
+      1: 25,
+      2: 50,
+      3: 100,
+    };
+
+    var elems;
+    var _needsrender = true;
+
+    function create_datacube(dtype, num_bytes, size) {
+      let floating = dtype === 'float32' || dtype == 'float64';
+
+      if (floating) {
+        return new FloatingPointDataCube({
           bytes: num_bytes,
           size: size,
         });
       }
+      else if (dtype == 'bool') {
+        return new BooleanDataCube({
+          size: size,
+        });
+      }
 
-      function configure_segmentation_ui () {
-        $(channel).on('mousemove', function (e) {
-          e.stopPropagation();
-          MOUSE_OVER_IMAGE = true;
+      return new DataCube({
+        bytes: num_bytes,
+        size: size,
+      });
+    }
 
-          let x = e.offsetX / $(channel).innerWidth(), 
-            y = e.offsetY / $(channel).innerHeight();
+    function configure_segmentation_ui() {
+      $(channel).on('mousemove', function (e) {
+        e.stopPropagation();
+        MOUSE_OVER_IMAGE = true;
+
+        let x = e.offsetX / $(channel).innerWidth(),
+          y = e.offsetY / $(channel).innerHeight();
+
+        x = clamp(x, 0, 0.999999999);
+        y = clamp(y, 0, 0.999999999);
+
+        if (AXIS == 'z') {
+          SLICE.x = (x * SIZE.x) | 0;
+          SLICE.y = (y * SIZE.y) | 0;
+        }
+        else if (AXIS == 'y') {
+          SLICE.x = (x * SIZE.x) | 0;
+          SLICE.z = (y * SIZE.z) | 0;
+        }
+        else if (AXIS == 'x') {
+          SLICE.y = (x * SIZE.y) | 0;
+          SLICE.z = (y * SIZE.z) | 0;
+        }
+
+        render();
+      });
+
+      function paint(evt) {
+        var x = evt.offsetX / $(channel).innerWidth(),
+          y = evt.offsetY / $(channel).innerHeight();
+
+        x = clamp(x, 0, 0.999999999);
+        y = clamp(y, 0, 0.999999999);
+
+        let diameter = BRUSH_DIAMETERS[BRUSH];
+        let dx = diameter / $(channel).innerWidth();
+        let dy = diameter / $(channel).innerHeight();
+
+        if (ZOOMED) {
+          dx /= ZOOM_FACTOR;
+          dy /= ZOOM_FACTOR;
+        }
+
+        if (evt.which === 1) {
+          if (elems.paintmode.prop("checked")) {
+            let label = parseInt(elems.paintlabel.val());
+            if (!isNaN(label)) {
+              vol.paintCircle(AXIS, SLICE[AXIS], dx, dy, x, y, label);
+            }
+          }
+          else {
+            vol.selectSegsInCircle(AXIS, SLICE[AXIS], dx, dy, x, y);
+          }
+        }
+
+        render(true);
+      }
+
+      function erase(evt) {
+        var x = evt.offsetX / $(channel).innerWidth(),
+          y = evt.offsetY / $(channel).innerHeight();
+
+        x = clamp(x, 0, 0.999999999);
+        y = clamp(y, 0, 0.999999999);
+
+        let diameter = BRUSH_DIAMETERS[BRUSH];
+        let dx = diameter / $(channel).innerWidth();
+        let dy = diameter / $(channel).innerHeight();
+
+        if (ZOOMED) {
+          dx /= ZOOM_FACTOR;
+          dy /= ZOOM_FACTOR;
+        }
+
+        if (elems.paintmode.prop("checked")) {
+          vol.paintCircle(AXIS, SLICE[AXIS], dx, dy, x, y, 0);
+        }
+        else {
+          vol.eraseSegsInCircle(AXIS, SLICE[AXIS], dx, dy, x, y);
+        }
+        render(true);
+      }
+
+      if (vol.has_segmentation) {
+        $(document).on("mousemove", function () {
+          MOUSE_OVER_IMAGE = false;
+          PAINTING_MODE = 0;
+          render();
+        });
+
+        $(channel)
+          .on('click', function (evt) {
+            if (BRUSH > 0 || PAINT_MOVED) {
+              return;
+            }
+
+            let innerWidth = $(channel).innerWidth();
+            let innerHeight = $(channel).innerHeight();
+
+            var x = evt.offsetX / innerWidth,
+              y = evt.offsetY / innerHeight;
+
+            x = clamp(x, 0, 0.999999999);
+            y = clamp(y, 0, 0.999999999);
+
+            if (evt.which === 1) {
+              UNDO.push();
+              vol.toggleSegment(AXIS, SLICE[AXIS], x, y);
+              UNDO.push();
+            }
+          })
+          .on('mousedown', function (evt) {
+            PAINTING_MODE = 1;
+            UNDO.push();
+            if (BRUSH === 0) {
+              PAINT_MOVED = false;
+              return;
+            }
+            paint(evt);
+            evt.stopPropagation();
+          })
+          .on('mouseup', function (evt) {
+            PAINTING_MODE = 0;
+            UNDO.push();
+            render(true);
+            evt.stopPropagation();
+          })
+          .on('mousemove', function (evt) {
+            if (PAINTING_MODE > 0) {
+              PAINT_MOVED = true;
+              if (PAINTING_MODE === 1) {
+                paint(evt);
+              }
+              else {
+                erase(evt);
+              }
+            }
+            evt.stopPropagation();
+          })
+          .on('contextmenu', function (evt) {
+            PAINTING_MODE = 2;
+            PAINT_MOVED = false;
+            UNDO.push();
+            erase(evt);
+            evt.stopPropagation();
+            evt.preventDefault();
+          });
+      }
+    }
+
+    function setup_single_volume(data) {
+      render_static();
+
+      let datacube = create_datacube(data.data_types[0], data.data_bytes, SIZE);
+
+      if (data.layer_type === 'segmentation') {
+        window.vol = new SegmentationVolume(datacube, true);
+      }
+      else {
+        window.vol = new MonoVolume(datacube, false);
+      }
+
+      let vol = window.vol;
+
+      vol.load('/channel', function (ratio) {
+        render();
+        UNDO.push();
+      }).then(() => render());
+
+      configure_segmentation_ui();
+    }
+
+    function setup_hyper_volume(data) {
+      render_static();
+
+      function get_cube(index) {
+        return create_datacube(data.data_types[index], data.data_bytes[index], SIZE);
+      }
+
+      window.vol = new HyperVolume(get_cube(0), get_cube(1));
+      let vol = window.vol;
+
+      vol.load(function (ratio) {
+        render();
+        UNDO.push();
+      }).then(() => render());
+
+      configure_segmentation_ui();
+    }
+
+    function toggleMenu() {
+      elems.rtsidebar.toggleClass("hidden");
+      elems.showsidebar.toggleClass("hidden");
+    }
+
+    $(document).ready(function () {
+      elems = {
+        cloudpath: $('#cloudpath'),
+        bounds: $('#bounds'),
+        dtype: $('#dtype'),
+        resolution: $('#resolution'),
+        shape: $('#shape'),
+        axis: $('#axis'),
+        coord: $('#coord'),
+        realcoord: $('#realcoord'),
+        clickcoord: $('#clickcoord'),
+        clickrealcoord: $('#clickrealcoord'),
+        loading: $('#loading'),
+        pxvalue: $('#pxvalue'),
+        clickpxvalue: $('#clickpxvalue'),
+        channel: $('#channel'),
+        selected_segments: $('#selected_segments'),
+        addsegs: $('#addsegs'),
+        show_hover: $('#show_hover'),
+        show_unselected: $('#show_unselected'),
+        magnification: $('#magnification'),
+        showsidebar: $('#show-sidebar'),
+        rtsidebar: $('#right-sidebar'),
+        copysegs: $("#copy-segs"),
+        brushsize: $("#brush-size"),
+        paintmode: $("#paint_voxels"),
+        paintlabel: $("#paintlabel"),
+        memoryusage: $("#memory-usage"),
+      };
+
+      window.channel = elems.channel[0];
+      window.channelctx = channel.getContext('2d');
+
+      $.get('/parameters', function (data, status) {
+        SIZE = {
+          x: data.bounds[3] - data.bounds[0],
+          y: data.bounds[4] - data.bounds[1],
+          z: data.bounds[5] - data.bounds[2],
+        };
+
+        PARAMETERS = data;
+
+        if (data.viewtype === 'single') {
+          setup_single_volume(data);
+        }
+        else {
+          setup_hyper_volume(data);
+        }
+
+        $(channel).on('mouseout', function (e) {
+          PXVALUE = [];
+          vol.hover_id = null;
+          render(true);
+        });
+
+        $(channel).on('click', function (e) {
+          var x = e.offsetX / $(this).innerWidth(),
+            y = e.offsetY / $(this).innerHeight();
 
           x = clamp(x, 0, 0.999999999);
           y = clamp(y, 0, 0.999999999);
 
           if (AXIS == 'z') {
-            SLICE.x = (x * SIZE.x)|0;
-            SLICE.y = (y * SIZE.y)|0;
+            CLICK.x = (x * SIZE.x) | 0;
+            CLICK.y = (y * SIZE.y) | 0;
+            CLICK.z = SLICE.z;
           }
           else if (AXIS == 'y') {
-            SLICE.x = (x * SIZE.x)|0;
-            SLICE.z = (y * SIZE.z)|0;
+            CLICK.x = (x * SIZE.x) | 0;
+            CLICK.z = (y * SIZE.z) | 0;
+            CLICK.y = SLICE.y;
           }
           else if (AXIS == 'x') {
-            SLICE.y = (x * SIZE.y)|0;
-            SLICE.z = (y * SIZE.z)|0;
+            CLICK.y = (x * SIZE.y) | 0;
+            CLICK.z = (y * SIZE.z) | 0;
+            CLICK.x = SLICE.x;
           }
 
-          render(); 
+          CLICK.pxvalue = [vol.channel.get(CLICK.x, CLICK.y, CLICK.z)];
+
+          if (vol.segmentation) {
+            CLICK.pxvalue.push(
+              vol.renumbering[vol.segmentation.get(CLICK.x, CLICK.y, CLICK.z)]
+            );
+          }
+          else if (vol.has_segmentation) {
+            CLICK.pxvalue[0] = vol.renumbering[CLICK.pxvalue[0]];
+          }
+
+          render();
         });
 
-        function paint (evt) {
-          var x = evt.offsetX / $(channel).innerWidth(), 
-            y = evt.offsetY / $(channel).innerHeight();
-
-          x = clamp(x, 0, 0.999999999);
-          y = clamp(y, 0, 0.999999999); 
-
-          let diameter = BRUSH_DIAMETERS[BRUSH];
-          let dx = diameter / $(channel).innerWidth();
-          let dy = diameter / $(channel).innerHeight();
-
-          if (ZOOMED) {
-            dx /= ZOOM_FACTOR;
-            dy /= ZOOM_FACTOR;
-          }
-          
-          if (evt.which === 1) {
-            if (elems.paintmode.prop("checked")) {
-              let label = parseInt(elems.paintlabel.val());
-              if (!isNaN(label)) {
-                vol.paintCircle(AXIS, SLICE[AXIS], dx, dy, x, y, label);
+        if (data.viewtype === "hyper") {
+          $(document).on('keydown', function (evt) {
+            if (evt.keyCode === 16 && !evt.ctrlKey) {
+              if (evt.originalEvent.code === "ShiftRight") {
+                vol.hide_channel = true;
               }
+              else {
+                vol.hide_segmentation = true;
+              }
+              render(true);
             }
-            else {
-              vol.selectSegsInCircle(AXIS, SLICE[AXIS], dx, dy, x, y);
-            }
-          }
-    
-          render(true);
-        }
-
-        function erase (evt) {
-          var x = evt.offsetX / $(channel).innerWidth(), 
-            y = evt.offsetY / $(channel).innerHeight();
-
-          x = clamp(x, 0, 0.999999999);
-          y = clamp(y, 0, 0.999999999); 
-
-          let diameter = BRUSH_DIAMETERS[BRUSH];
-          let dx = diameter / $(channel).innerWidth();
-          let dy = diameter / $(channel).innerHeight();
-
-          if (ZOOMED) {
-            dx /= ZOOM_FACTOR;
-            dy /= ZOOM_FACTOR;
-          }
-
-          if (elems.paintmode.prop("checked")) {
-            vol.paintCircle(AXIS, SLICE[AXIS], dx, dy, x, y, 0);
-          }
-          else {
-            vol.eraseSegsInCircle(AXIS, SLICE[AXIS], dx, dy, x, y);
-          }
-          render(true);  
-        }
-
-        if (vol.has_segmentation) {
-          $(document).on("mousemove", function () {
-            MOUSE_OVER_IMAGE = false;
-            PAINTING_MODE = 0;
-            render();
           });
 
-          $(channel)
-            .on('click', function (evt) {
-              if (BRUSH > 0 || PAINT_MOVED) {
-                return;
+          $(document).on('keyup', function (evt) {
+            if (evt.keyCode === 16 && !evt.ctrlKey) {
+              if (evt.originalEvent.code === "ShiftRight") {
+                vol.hide_channel = false;
               }
-
-              let innerWidth = $(channel).innerWidth();
-              let innerHeight = $(channel).innerHeight();
-
-              var x = evt.offsetX / innerWidth, 
-                y = evt.offsetY / innerHeight;
-
-              x = clamp(x, 0, 0.999999999);
-              y = clamp(y, 0, 0.999999999); 
-
-              if (evt.which === 1) {
-                UNDO.push();
-                vol.toggleSegment(AXIS, SLICE[AXIS], x, y);
-                UNDO.push();
+              else {
+                vol.hide_segmentation = false;
               }
-            })
-            .on('mousedown', function (evt) {
-              PAINTING_MODE = 1;
-              UNDO.push();
-              if (BRUSH === 0) {
-                PAINT_MOVED = false;
-                return;
-              }
-              paint(evt);
-              evt.stopPropagation();
-            })
-            .on('mouseup', function (evt) {
-              PAINTING_MODE = 0;
-              UNDO.push();
               render(true);
-              evt.stopPropagation();
-            })
-            .on('mousemove', function (evt) {
-              if (PAINTING_MODE > 0) {
-                PAINT_MOVED = true;
-                if (PAINTING_MODE === 1) {
-                  paint(evt);
-                }
-                else {
-                  erase(evt);
-                }
-              }
-              evt.stopPropagation();
-            })
-            .on('contextmenu', function (evt) {
-              PAINTING_MODE = 2;
-              PAINT_MOVED = false;
-              UNDO.push();
-              erase(evt);
-              evt.stopPropagation();
-              evt.preventDefault();
-            });
+            }
+          });
         }
+
+        loop();
+      });
+
+      elems.paintlabel.on("keyup keypress keydown", function (evt) {
+        evt.stopPropagation();
+      });
+
+      elems.showsidebar.on("click", function () {
+        toggleMenu();
+      });
+
+      elems.copysegs.on("click", function () {
+        navigator.clipboard.writeText(elems.selected_segments.text());
+      });
+
+      elems.addsegs.on("keypress keydown", function (evt) {
+        evt.stopPropagation();
+      });
+
+      elems.addsegs.on("keyup", function (evt) {
+        evt.stopPropagation();
+        if (evt.keyCode !== 13) {
+          return;
+        }
+
+        var val = elems.addsegs.val().replace(/\s/g, "");
+        if (val === "") {
+          return;
+        }
+
+        val
+          .split(",")
+          .map((x) => BigInt(x))
+          .forEach((segid) => vol.selectSegment(segid));
+
+        elems.addsegs.val("");
+        elems.addsegs.blur();
+        vol.hover_id = null;
+        Undo.push('select');
+        render(true);
+      });
+
+      elems.rtsidebar.on('wheel', function (e) {
+        e.stopPropagation();
+      });
+    });
+
+    $(document).on('wheel', function (e) {
+      var delta = clamp(e.originalEvent.deltaY, -1, 1);
+      delta = -Math.round(delta);
+      move_slice(delta);
+    });
+
+    var AXES = ['z', 'y', 'x'];
+    var ZOOMED = false;
+    var ZOOM_FACTOR = 10;
+
+    function zoomTo() {
+      let x = 0;
+      let y = 0;
+      let sx = 0;
+      let sy = 0;
+      if (AXIS == 'z') {
+        x = SLICE.x;
+        y = SLICE.y;
+        sx = SIZE.x;
+        sy = SIZE.y;
+      }
+      else if (AXIS == 'y') {
+        x = SLICE.x;
+        y = SLICE.z;
+        sx = SIZE.x;
+        sy = SIZE.z;
+      }
+      else if (AXIS == 'x') {
+        x = SLICE.y;
+        y = SLICE.z;
+        sx = SIZE.y;
+        sy = SIZE.z;
       }
 
-      function setup_single_volume (data) {  
-        render_static();
+      if (ZOOMED) {
+        elems.channel.css('transform', '');
+      }
+      else if (MAGNIFICATION > ZOOM_FACTOR) {
+        return;
+      }
+      else {
+        let zfactor = ZOOM_FACTOR / MAGNIFICATION;
+        let dx = x / sx - 0.5;
+        let dy = y / sy - 0.5;
 
-        let datacube = create_datacube(data.data_types[0], data.data_bytes, SIZE);
+        dx *= elems.channel.width() * zfactor;
+        dy *= elems.channel.height() * zfactor;
 
-        if (data.layer_type === 'segmentation') {
-          window.vol = new SegmentationVolume(datacube, true);
+        elems.channel.css('transform', `matrix(${zfactor},0,0,${zfactor},${-dx},${-dy})`);
+      }
+      ZOOMED = !ZOOMED;
+    }
+
+    $(document).on('keyup', function (evt) {
+      if (evt.keyCode === 'A'.charCodeAt(0)) {
+        rotate_axis(2);
+      }
+      else if (evt.keyCode === 'D'.charCodeAt(0)) {
+        rotate_axis(1);
+      }
+      else if (evt.keyCode === ' '.charCodeAt(0)) {
+        zoomTo();
+      }
+      else if (evt.keyCode === 'Q'.charCodeAt(0)) {
+        BRUSH = Math.max(BRUSH - 1, 0);
+        render(true);
+      }
+      else if (evt.keyCode === 'E'.charCodeAt(0)) {
+        BRUSH = Math.min(BRUSH + 1, 3);
+        render(true);
+      }
+      else if (evt.keyCode === "I".charCodeAt(0)) {
+        invertSelection();
+      }
+      else if (
+        evt.keyCode === 'Z'.charCodeAt(0) && evt.ctrlKey
+      ) {
+        if (evt.shiftKey) {
+          UNDO.redo();
         }
         else {
-          window.vol = new MonoVolume(datacube, false);
+          UNDO.undo();
         }
+      }
+    });
 
-        let vol = window.vol;
+    $(document).on('keypress', function (evt) {
+      if (evt.keyCode === 'W'.charCodeAt(0)
+        || evt.keyCode === 'w'.charCodeAt(0)
+        || evt.keyCode === '.'.charCodeAt(0)
+        || evt.keyCode === 190) {
 
-        vol.load('/channel', function (ratio) {
-          render();
+        move_slice(1);
+      }
+      else if (evt.keyCode === 'S'.charCodeAt(0)
+        || evt.keyCode === 's'.charCodeAt(0)
+        || evt.keyCode === ','.charCodeAt(0)
+        || evt.keyCode === 188) {
+
+        move_slice(-1);
+      }
+      else if (evt.keyCode === 'L'.charCodeAt(0)
+        || evt.keyCode === 'l'.charCodeAt(0)
+      ) {
+
+        vol.shuffleColors();
+        render(true);
+      }
+      else if (evt.keyCode === 'X'.charCodeAt(0)
+        || evt.keyCode === 'x'.charCodeAt(0)) {
+
+        if (vol.clearSelected) {
           UNDO.push();
-        }).then( () => render() );
-
-        configure_segmentation_ui();
+          vol.clearSelected()
+        }
+        render(true);
       }
-
-      function setup_hyper_volume (data) {
-        render_static();
-
-        function get_cube(index) {
-          return create_datacube(data.data_types[index], data.data_bytes[index], SIZE);
-        }
-
-        window.vol = new HyperVolume(get_cube(0), get_cube(1));
-        let vol = window.vol;
-
-        vol.load(function (ratio) {
-          render();
-          UNDO.push();
-        }).then( () => render() );
-
-        configure_segmentation_ui();
+      else if (
+        evt.keyCode === '='.charCodeAt(0) // '+' without shift
+        || evt.keyCode === '+'.charCodeAt(0)
+        || evt.keyCode === 107 // '+' sometimes
+      ) {
+        vol.alpha = clamp(vol.alpha + 0.1, 0, 1);
+        render();
       }
-
-      function toggleMenu () {
-        elems.rtsidebar.toggleClass("hidden");
-        elems.showsidebar.toggleClass("hidden");
+      else if (evt.keyCode === '-'.charCodeAt(0)) {
+        vol.alpha = clamp(vol.alpha - 0.1, 0, 1);
+        render();
       }
+      else if (evt.keyCode === "H".charCodeAt(0)
+        || evt.keyCode === "h".charCodeAt(0)) {
 
-      $(document).ready(function () {
-        elems = {
-          cloudpath: $('#cloudpath'),
-          bounds: $('#bounds'),
-          dtype: $('#dtype'),
-          resolution: $('#resolution'),
-          shape: $('#shape'),
-          axis: $('#axis'),
-          coord: $('#coord'),
-          realcoord: $('#realcoord'),
-          clickcoord: $('#clickcoord'),
-          clickrealcoord: $('#clickrealcoord'),
-          loading: $('#loading'),
-          pxvalue: $('#pxvalue'),
-          clickpxvalue: $('#clickpxvalue'),
-          channel: $('#channel'),
-          selected_segments: $('#selected_segments'),
-          addsegs: $('#addsegs'),
-          show_hover: $('#show_hover'),
-          show_unselected: $('#show_unselected'),
-          magnification: $('#magnification'),
-          showsidebar: $('#show-sidebar'),
-          rtsidebar: $('#right-sidebar'),
-          copysegs: $("#copy-segs"),
-          brushsize: $("#brush-size"),
-          paintmode: $("#paint_voxels"),
-          paintlabel: $("#paintlabel"),
-          memoryusage: $("#memory-usage"),
-        };
-        
-        window.channel = elems.channel[0];
-        window.channelctx = channel.getContext('2d');
-
-        $.get('/parameters', function (data, status) {
-          SIZE = {
-            x: data.bounds[3] - data.bounds[0],
-            y: data.bounds[4] - data.bounds[1],
-            z: data.bounds[5] - data.bounds[2],
-          };
-
-          PARAMETERS = data;
-
-          if (data.viewtype === 'single') {
-            setup_single_volume(data);
-          }
-          else {
-            setup_hyper_volume(data);
-          }
-
-         $(channel).on('mouseout', function (e) {
-            PXVALUE = [];
-            vol.hover_id = null;
-            render(true);
-          });
-
-          $(channel).on('click', function (e) {
-            var x = e.offsetX / $(this).innerWidth(), 
-              y = e.offsetY / $(this).innerHeight();
-
-            x = clamp(x, 0, 0.999999999);
-            y = clamp(y, 0, 0.999999999);
-
-            if (AXIS == 'z') {
-              CLICK.x = (x * SIZE.x)|0;
-              CLICK.y = (y * SIZE.y)|0;
-              CLICK.z = SLICE.z;
-            }
-            else if (AXIS == 'y') {
-              CLICK.x = (x * SIZE.x)|0;
-              CLICK.z = (y * SIZE.z)|0;
-              CLICK.y = SLICE.y;
-            }
-            else if (AXIS == 'x') {
-              CLICK.y = (x * SIZE.y)|0;
-              CLICK.z = (y * SIZE.z)|0;
-              CLICK.x = SLICE.x;
-            }
-
-            CLICK.pxvalue = [ vol.channel.get(CLICK.x, CLICK.y, CLICK.z) ];
-
-            if (vol.segmentation) {
-              CLICK.pxvalue.push(
-                vol.renumbering[vol.segmentation.get(CLICK.x, CLICK.y, CLICK.z)]
-              );
-            }
-            else if (vol.has_segmentation) {
-              CLICK.pxvalue[0] = vol.renumbering[CLICK.pxvalue[0]];
-            }
-            
-            render();
-          });
-
-          if (data.viewtype === "hyper") {
-            $(document).on('keydown', function (evt) {
-              if (evt.keyCode === 16 && !evt.ctrlKey) {
-                if (evt.originalEvent.code === "ShiftRight") {
-                  vol.hide_channel = true;
-                }
-                else {
-                  vol.hide_segmentation = true;
-                }
-                render(true);
-              }
-            });
-
-            $(document).on('keyup', function (evt) {
-              if (evt.keyCode === 16 && !evt.ctrlKey) {
-                if (evt.originalEvent.code === "ShiftRight") {
-                  vol.hide_channel = false;
-                }
-                else {
-                  vol.hide_segmentation = false;
-                }
-                render(true);
-              }
-            });
-          }
-
-          loop();
-        });
-
-        elems.paintlabel.on("keyup keypress keydown", function (evt) {
-          evt.stopPropagation();
-        });
-
-        elems.showsidebar.on("click", function () {
-          toggleMenu(); 
-        });
-
-        elems.copysegs.on("click", function () {
-          navigator.clipboard.writeText(elems.selected_segments.text());
-        });
-
-        elems.addsegs.on("keypress keydown", function (evt) {
-          evt.stopPropagation();
-        });
-
-        elems.addsegs.on("keyup", function (evt) {
-          evt.stopPropagation();
-          if (evt.keyCode !== 13) {
-            return;
-          }
-
-          var val = elems.addsegs.val().replace(/\s/g, "");
-          if (val === "") {
-            return;
-          }
-
-          val
-            .split(",")
-            .map((x) => BigInt(x))
-            .forEach((segid) => vol.selectSegment(segid));
-
-          elems.addsegs.val("");
-          elems.addsegs.blur();
-          vol.hover_id = null;
-          Undo.push('select');
-          render(true);
-        });
-
-        elems.rtsidebar.on('wheel', function (e) {
-          e.stopPropagation();
-        });
-      });
-
-      $(document).on('wheel', function (e) {
-        var delta = clamp(e.originalEvent.deltaY, -1, 1);
-        delta = -Math.round(delta);
-        move_slice(delta);
-      });
-
-      var AXES = ['z', 'y', 'x'];
-      var ZOOMED = false;
-      var ZOOM_FACTOR = 10;
-
-      function zoomTo () {
-          let x = 0;
-          let y = 0;
-          let sx = 0;
-          let sy = 0;
-          if (AXIS == 'z') {
-            x = SLICE.x;
-            y = SLICE.y;
-            sx = SIZE.x;
-            sy = SIZE.y;
-          }
-          else if (AXIS == 'y') {
-            x = SLICE.x;
-            y = SLICE.z;
-            sx = SIZE.x;
-            sy = SIZE.z;
-          }
-          else if (AXIS == 'x') {
-            x = SLICE.y;
-            y = SLICE.z;
-            sx = SIZE.y;
-            sy = SIZE.z;
-          }
-
-          if (ZOOMED) {
-            elems.channel.css('transform', '');
-          }
-          else if (MAGNIFICATION > ZOOM_FACTOR) {
-            return;
-          }
-          else {
-            let zfactor = ZOOM_FACTOR / MAGNIFICATION;
-            let dx = x / sx - 0.5;
-            let dy = y / sy - 0.5;
-
-            dx *= elems.channel.width() * zfactor;
-            dy *= elems.channel.height() * zfactor;
-
-            elems.channel.css('transform', `matrix(${zfactor},0,0,${zfactor},${-dx},${-dy})`);
-          }
-          ZOOMED = !ZOOMED;
+        elems.show_hover.prop("checked",
+          !elems.show_hover.prop("checked")
+        );
       }
+      else if (evt.keyCode === "M".charCodeAt(0)
+        || evt.keyCode === "m".charCodeAt(0)) {
 
-      $(document).on('keyup', function (evt) {
-        if (evt.keyCode === 'A'.charCodeAt(0)) {
-          rotate_axis(2);
-        }
-        else if (evt.keyCode === 'D'.charCodeAt(0)) {
-          rotate_axis(1);
-        }
-        else if (evt.keyCode === ' '.charCodeAt(0)) {
-          zoomTo();
-        }
-        else if (evt.keyCode === 'Q'.charCodeAt(0)) {
-          BRUSH = Math.max(BRUSH - 1, 0);
-          render(true);
-        }
-        else if (evt.keyCode === 'E'.charCodeAt(0)) {
-          BRUSH = Math.min(BRUSH + 1, 3);
-          render(true);
-        }
-        else if (evt.keyCode === "I".charCodeAt(0)) {
-          invertSelection();
-        }
-        else if (
-          evt.keyCode === 'Z'.charCodeAt(0) && evt.ctrlKey
-        ) {
-          if (evt.shiftKey) {
-            UNDO.redo();
-          }
-          else {
-            UNDO.undo();
-          }
-        }
-      });
+        toggleMenu();
+      }
+      else if (evt.keyCode === "U".charCodeAt(0)
+        || evt.keyCode === "u".charCodeAt(0)) {
 
-      $(document).on('keypress', function (evt) {
-        if (evt.keyCode === 'W'.charCodeAt(0) 
-          || evt.keyCode === 'w'.charCodeAt(0)
-          || evt.keyCode === '.'.charCodeAt(0)
-          || evt.keyCode === 190) {
-          
-          move_slice(1);
-        }
-        else if (evt.keyCode === 'S'.charCodeAt(0)
-          || evt.keyCode === 's'.charCodeAt(0)
-          || evt.keyCode === ','.charCodeAt(0)
-          || evt.keyCode === 188) {
-          
-          move_slice(-1);
-        }
-        else if (evt.keyCode === 'L'.charCodeAt(0)
-          || evt.keyCode === 'l'.charCodeAt(0)
-        ) {
-          
-          vol.shuffleColors();
-          render(true);   
-        }
-        else if (evt.keyCode === 'X'.charCodeAt(0)
-          || evt.keyCode === 'x'.charCodeAt(0)) {
-          
-          if (vol.clearSelected) {
-            UNDO.push();
-            vol.clearSelected()
-          }
-          render(true);
-        }
-        else if (
-          evt.keyCode === '='.charCodeAt(0) // '+' without shift
-          || evt.keyCode === '+'.charCodeAt(0) 
-          || evt.keyCode === 107 // '+' sometimes
-        ) {
-          vol.alpha = clamp(vol.alpha + 0.1, 0, 1);
-          render();
-        }
-        else if (evt.keyCode === '-'.charCodeAt(0)) {
-          vol.alpha = clamp(vol.alpha - 0.1, 0, 1);
-          render();
-        }
-        else if (evt.keyCode === "H".charCodeAt(0)
-            || evt.keyCode === "h".charCodeAt(0)) {
+        elems.show_unselected.prop("checked",
+          !elems.show_unselected.prop("checked")
+        );
+        render(true);
+      }
+      else if (evt.keyCode === "P".charCodeAt(0)
+        || evt.keyCode === "p".charCodeAt(0)) {
 
-          elems.show_hover.prop("checked", 
-            !elems.show_hover.prop("checked")
-          );
-        }
-        else if (evt.keyCode === "M".charCodeAt(0)
-          || evt.keyCode === "m".charCodeAt(0)) {
-          
-          toggleMenu();
-        }
-        else if (evt.keyCode === "U".charCodeAt(0)
-            || evt.keyCode === "u".charCodeAt(0)) {
-
-          elems.show_unselected.prop("checked", 
-            !elems.show_unselected.prop("checked")
-          );
-          render(true);
-        }
-        else if (evt.keyCode === "P".charCodeAt(0)
-            || evt.keyCode === "p".charCodeAt(0)) {
-
-          elems.paintmode.prop("checked", 
-            !elems.paintmode.prop("checked")
-          );
-        }
-        else if (evt.keyCode === "1".charCodeAt(0)) {
-          MAGNIFICATION /= 2;
-          MAGNIFICATION = Math.max(MAGNIFICATION, 0.25);
-          elems.channel.css("width", (channel.width * MAGNIFICATION) + "px");
-          elems.channel.css("height", (channel.height * MAGNIFICATION) + "px");
-          elems.channel.css('transform', '');
-          render();
-        }
-        else if (evt.keyCode === "2".charCodeAt(0)) {
-          MAGNIFICATION *= 2;
-          MAGNIFICATION = Math.min(MAGNIFICATION, 256);
-          elems.channel.css("width", (channel.width * MAGNIFICATION) + "px");
-          elems.channel.css("height", (channel.height * MAGNIFICATION) + "px");
-          elems.channel.css('transform', '');
-          render();
-        }
-
-        elems.show_unselected.on('click', function () {
-          render(true);
-        });
-
-        $("#brush-size div.exact").on("click", function () {
-          BRUSH = 0;
-          render(true);
-        });
-        $("#brush-size div.small").on("click", function () {
-          BRUSH = 1;
-          render(true);
-        });
-        $("#brush-size div.medium").on("click", function () {
-          BRUSH = 2;
-          render(true);
-        });
-        $("#brush-size div.large").on("click", function () {
-          BRUSH = 3;
-          render(true);
-        });
-
-      });
-
-      function rotate_axis(delta) {
-        if (PAINTING_MODE) {
-          UNDO.push();
-        }
-
-        let index = (AXES.indexOf(AXIS) + delta) % AXES.length;
-        AXIS = AXES[index];
-
-        let face_dims = vol.channel.faceDimensions(AXIS);
-
-        elems.channel.css("width", (face_dims[0] * MAGNIFICATION) + "px");
-        elems.channel.css("height", (face_dims[1] * MAGNIFICATION) + "px");
-
+        elems.paintmode.prop("checked",
+          !elems.paintmode.prop("checked")
+        );
+      }
+      else if (evt.keyCode === "1".charCodeAt(0)) {
+        MAGNIFICATION /= 2;
+        MAGNIFICATION = Math.max(MAGNIFICATION, 0.25);
+        elems.channel.css("width", (channel.width * MAGNIFICATION) + "px");
+        elems.channel.css("height", (channel.height * MAGNIFICATION) + "px");
+        elems.channel.css('transform', '');
+        render();
+      }
+      else if (evt.keyCode === "2".charCodeAt(0)) {
+        MAGNIFICATION *= 2;
+        MAGNIFICATION = Math.min(MAGNIFICATION, 256);
+        elems.channel.css("width", (channel.width * MAGNIFICATION) + "px");
+        elems.channel.css("height", (channel.height * MAGNIFICATION) + "px");
+        elems.channel.css('transform', '');
         render();
       }
 
-      function move_slice (delta) {
-        if (PAINTING_MODE) {
-          UNDO.push();
-        }
+      elems.show_unselected.on('click', function () {
+        render(true);
+      });
 
-        SLICE[AXIS] += delta;
-        SLICE[AXIS] = clamp(SLICE[AXIS], 0, SIZE[AXIS] - 1);
-        render();
+      $("#brush-size div.exact").on("click", function () {
+        BRUSH = 0;
+        render(true);
+      });
+      $("#brush-size div.small").on("click", function () {
+        BRUSH = 1;
+        render(true);
+      });
+      $("#brush-size div.medium").on("click", function () {
+        BRUSH = 2;
+        render(true);
+      });
+      $("#brush-size div.large").on("click", function () {
+        BRUSH = 3;
+        render(true);
+      });
+
+    });
+
+    function rotate_axis(delta) {
+      if (PAINTING_MODE) {
+        UNDO.push();
       }
 
-      function render_static () {
-        if (PARAMETERS.viewtype === 'single') {
-          $('#instructions .hyperview').hide();
+      let index = (AXES.indexOf(AXIS) + delta) % AXES.length;
+      AXIS = AXES[index];
 
-          if (PARAMETERS.layer_type === 'image') {
-            $('#instructions .segmentation').hide();
-          }
-          else {
-            $(channel).addClass("paintable");
-          }
+      let face_dims = vol.channel.faceDimensions(AXIS);
 
-          PARAMETERS.cloudpath[0].split('/')
+      elems.channel.css("width", (face_dims[0] * MAGNIFICATION) + "px");
+      elems.channel.css("height", (face_dims[1] * MAGNIFICATION) + "px");
+
+      render();
+    }
+
+    function move_slice(delta) {
+      if (PAINTING_MODE) {
+        UNDO.push();
+      }
+
+      SLICE[AXIS] += delta;
+      SLICE[AXIS] = clamp(SLICE[AXIS], 0, SIZE[AXIS] - 1);
+      render();
+    }
+
+    function render_static() {
+      if (PARAMETERS.viewtype === 'single') {
+        $('#instructions .hyperview').hide();
+
+        if (PARAMETERS.layer_type === 'image') {
+          $('#instructions .segmentation').hide();
         }
         else {
           $(channel).addClass("paintable");
         }
 
-        let hyper = (PARAMETERS.viewtype === 'hyper') ? 'Hyper ' : '';
-        let firstlayer = PARAMETERS.cloudpath[0];
-
-        if (firstlayer === 'IN MEMORY') {
-          document.title = `MEMORY - ${hyper}μViewer`;
-        }
-        else if (firstlayer) {
-          document.title = `${PARAMETERS.cloudpath.join(" ; ")} - ${hyper}μViewer`;
-        }
-
-        elems.channel.css('width', SIZE.x + 'px').css('height', SIZE.y + 'px');
-
-        let b = PARAMETERS.bounds;
-        elems.cloudpath.text( PARAMETERS.cloudpath.join("; ") );
-        elems.bounds.text(
-          `<${b[0]}, ${b[1]}, ${b[2]}>, <${b[3]}, ${b[4]}, ${b[5]}>`
-        );
-        elems.dtype.text( PARAMETERS.data_types.join("; ") );
-        elems.resolution.text( PARAMETERS.resolution.join('x') );
-        elems.shape.text( `<${SIZE.x}, ${SIZE.y}, ${SIZE.z}>` );
-
-        let bytes = PARAMETERS["data_bytes"];
-
-        if (Array.isArray(bytes)) {
-          bytes = bytes.reduce((partialSum, a) => partialSum + a, 0);
-        }
-        bytes *= SIZE.x * SIZE.y * SIZE.z;
-        let megabytes = bytes / 1e6;
-        if (megabytes < 1) {
-          elems.memoryusage.text(`${(megabytes * 1000)|0} kB`);
-        }
-        else {
-          elems.memoryusage.text(`${megabytes|0} MB`);
-        }
+        PARAMETERS.cloudpath[0].split('/')
+      }
+      else {
+        $(channel).addClass("paintable");
       }
 
-      function update_pxvalue () {
-        PXVALUE = [];
+      let hyper = (PARAMETERS.viewtype === 'hyper') ? 'Hyper ' : '';
+      let firstlayer = PARAMETERS.cloudpath[0];
 
+      if (firstlayer === 'IN MEMORY') {
+        document.title = `MEMORY - ${hyper}μViewer`;
+      }
+      else if (firstlayer) {
+        document.title = `${PARAMETERS.cloudpath.join(" ; ")} - ${hyper}μViewer`;
+      }
+
+      elems.channel.css('width', SIZE.x + 'px').css('height', SIZE.y + 'px');
+
+      let b = PARAMETERS.bounds;
+      elems.cloudpath.text(PARAMETERS.cloudpath.join("; "));
+      elems.bounds.text(
+        `<${b[0]}, ${b[1]}, ${b[2]}>, <${b[3]}, ${b[4]}, ${b[5]}>`
+      );
+      elems.dtype.text(PARAMETERS.data_types.join("; "));
+      elems.resolution.text(PARAMETERS.resolution.join('x'));
+      elems.shape.text(`<${SIZE.x}, ${SIZE.y}, ${SIZE.z}>`);
+
+      let bytes = PARAMETERS["data_bytes"];
+
+      if (Array.isArray(bytes)) {
+        bytes = bytes.reduce((partialSum, a) => partialSum + a, 0);
+      }
+      bytes *= SIZE.x * SIZE.y * SIZE.z;
+      let megabytes = bytes / 1e6;
+      if (megabytes < 1) {
+        elems.memoryusage.text(`${(megabytes * 1000) | 0} kB`);
+      }
+      else {
+        elems.memoryusage.text(`${megabytes | 0} MB`);
+      }
+    }
+
+    function update_pxvalue() {
+      PXVALUE = [];
+
+      vol.hover_id = null;
+      if (vol.segmentation) {
+        PXVALUE.push(vol.channel.get(SLICE.x, SLICE.y, SLICE.z));
+        vol.hover_id = vol.segmentation.get(SLICE.x, SLICE.y, SLICE.z);
+        PXVALUE.push(vol.renumbering[vol.hover_id]);
+      }
+      else if (vol.has_segmentation) {
+        vol.hover_id = vol.channel.get(SLICE.x, SLICE.y, SLICE.z);
+        PXVALUE.push(vol.renumbering[vol.hover_id]);
+      }
+      else {
+        PXVALUE.push(vol.channel.get(SLICE.x, SLICE.y, SLICE.z));
+      }
+
+      if (!MOUSE_OVER_IMAGE || !elems.show_hover.prop('checked')) {
         vol.hover_id = null;
-        if (vol.segmentation) {
-          PXVALUE.push( vol.channel.get(SLICE.x, SLICE.y, SLICE.z) );
-          vol.hover_id = vol.segmentation.get(SLICE.x, SLICE.y, SLICE.z);
-          PXVALUE.push( vol.renumbering[vol.hover_id] );
-        }
-        else if (vol.has_segmentation) {
-          vol.hover_id = vol.channel.get(SLICE.x, SLICE.y, SLICE.z);
-          PXVALUE.push( vol.renumbering[vol.hover_id] );
-        }
-        else {
-          PXVALUE.push( vol.channel.get(SLICE.x, SLICE.y, SLICE.z) );
-        }
+      }
+    }
 
-        if (!MOUSE_OVER_IMAGE || !elems.show_hover.prop('checked')) {
-          vol.hover_id = null;
-        }
+    function render(invalidate_cache = false) {
+      update_pxvalue();
+      if (invalidate_cache) {
+        vol.cache.valid = false;
+      }
+      _needsrender = true;
+    }
+
+    function hardRender() {
+      if (AXIS == 'z') {
+        channel.width = SIZE.x;
+        channel.height = SIZE.y;
+      }
+      else if (AXIS == 'y') {
+        channel.width = SIZE.x;
+        channel.height = SIZE.z;
+      }
+      else if (AXIS == 'x') {
+        channel.width = SIZE.y;
+        channel.height = SIZE.z;
       }
 
-      function render (invalidate_cache=false) {
-        update_pxvalue();
-        if (invalidate_cache) {
-          vol.cache.valid = false;
-        }
-        _needsrender = true;
+      vol.show_unselected = elems.show_unselected.prop('checked');
+      vol.render(window.channelctx, AXIS, SLICE[AXIS]);
+
+      // compute real coordinate as well
+      let b = PARAMETERS.bounds;
+      let real = [SLICE.x + b[0], SLICE.y + b[1], SLICE.z + b[2]];
+      const is_offset = (b[0] != 0) || (b[1] != 0) || (b[2] != 0);
+
+      elems.axis.text(AXIS);
+      elems.coord.text(`<${SLICE.x}, ${SLICE.y}, ${SLICE.z}>`);
+
+      if (is_offset) {
+        elems.realcoord.text(`(${real[0]}, ${real[1]}, ${real[2]})`);
       }
 
-      function hardRender () {
-        if (AXIS == 'z') {
-          channel.width = SIZE.x;
-          channel.height = SIZE.y;
-        }
-        else if (AXIS == 'y') {
-          channel.width = SIZE.x;
-          channel.height = SIZE.z; 
-        }
-        else if (AXIS == 'x') {
-          channel.width = SIZE.y;
-          channel.height = SIZE.z; 
-        }
+      real = [CLICK.x + b[0], CLICK.y + b[1], CLICK.z + b[2]];
 
-        vol.show_unselected = elems.show_unselected.prop('checked');
-        vol.render(window.channelctx, AXIS, SLICE[AXIS]);
+      elems.clickcoord.text(`<${CLICK.x}, ${CLICK.y}, ${CLICK.z}>`);
 
-        // compute real coordinate as well
-        let b = PARAMETERS.bounds;
-        let real = [ SLICE.x + b[0], SLICE.y + b[1], SLICE.z + b[2] ];
-        const is_offset = (b[0] != 0) || (b[1] != 0) || (b[2] != 0);
-
-        elems.axis.text(AXIS);
-        elems.coord.text( `<${SLICE.x}, ${SLICE.y}, ${SLICE.z}>` );
-
-        if (is_offset) {
-          elems.realcoord.text( `(${real[0]}, ${real[1]}, ${real[2]})` );
-        }
-
-        real = [ CLICK.x + b[0], CLICK.y + b[1], CLICK.z + b[2] ];
-        
-        elems.clickcoord.text( `<${CLICK.x}, ${CLICK.y}, ${CLICK.z}>` );
-
-        if (is_offset) {
-          elems.clickrealcoord.text( `(${real[0]}, ${real[1]}, ${real[2]})` );
-        }
-
-        if (vol.loaded()) {
-          elems.loading.hide();
-        }
-        else {
-          elems.loading.text( (vol.progress() * 100).toFixed(0) + '%' );  
-        }
-
-        elems.magnification.text(`${MAGNIFICATION}x`);
-        
-        if (PXVALUE.length) {
-          elems.pxvalue.show().text( "value: " + PXVALUE.map(display_value).join("; ") );
-        }
-        else { 
-          elems.pxvalue.hide();
-        }
-
-        if (CLICK.pxvalue.length) {
-          elems.clickpxvalue.text( "value: " + CLICK.pxvalue.map(display_value).join("; ") );
-        }
-        else {
-          elems.clickpxvalue.text(""); 
-        }
-
-        if (vol.segments) {
-          elems.selected_segments.text( 
-            vol.selected().join(', ') 
-          );
-        }
-
-        if (BRUSH === 0) {
-          $(channel).removeClass("small medium large").addClass("exact");
-          elems.brushsize.removeClass("small medium large").addClass("exact");
-        }
-        else if (BRUSH === 1) {
-          $(channel).removeClass("exact medium large").addClass("small");
-          elems.brushsize.removeClass("exact medium large").addClass("small");
-        }
-        else if (BRUSH === 2) {
-          $(channel).removeClass("exact small large").addClass("medium");
-          elems.brushsize.removeClass("exact small large").addClass("medium");
-        }
-        else {
-          $(channel).removeClass("exact medium small").addClass("large"); 
-          elems.brushsize.removeClass("exact medium small").addClass("large"); 
-        }
-
-        _needsrender = false;
+      if (is_offset) {
+        elems.clickrealcoord.text(`(${real[0]}, ${real[1]}, ${real[2]})`);
       }
 
-      function display_value (val) {
-        if (PARAMETERS.is_floating) {
-          return val.toFixed(4);
-        }
-        else if ( // color image
-          PARAMETERS.layer_type == "image" && PARAMETERS.data_bytes == 4
-        ) {
-          return `${val} rgb: <${val & 0xff}, ${(val >> 8) & 0xff}, ${(val >> 16) & 0xff}>`;
-        }
-        return val;
+      if (vol.loaded()) {
+        elems.loading.hide();
+      }
+      else {
+        elems.loading.text((vol.progress() * 100).toFixed(0) + '%');
       }
 
-      function clamp (val, min, max) {
-        return Math.min(Math.max(val, min), max);
+      elems.magnification.text(`${MAGNIFICATION}x`);
+
+      if (PXVALUE.length) {
+        elems.pxvalue.show().text("value: " + PXVALUE.map(display_value).join("; "));
+      }
+      else {
+        elems.pxvalue.hide();
       }
 
-      function loop () {
-        if (_needsrender) {
-          hardRender();
-        }
-
-        requestAnimationFrame(loop);
+      if (CLICK.pxvalue.length) {
+        elems.clickpxvalue.text("value: " + CLICK.pxvalue.map(display_value).join("; "));
+      }
+      else {
+        elems.clickpxvalue.text("");
       }
 
-      function saveNumpy () {
-        let d = new Date();
-        let filename = `image-${d.getFullYear()}-${d.getMonth()}-${d.getDay()}.npy`;
-        vol.getSegmentation().saveNumpy(filename);
+      if (vol.segments) {
+        elems.selected_segments.text(
+          vol.selected().join(', ')
+        );
       }
 
-      function saveCrackle () {
-        let d = new Date();
-        let filename = `image-${d.getFullYear()}-${d.getMonth()}-${d.getDay()}.ckl`;
-        vol.getSegmentation().saveCrackle(filename);
+      if (BRUSH === 0) {
+        $(channel).removeClass("small medium large").addClass("exact");
+        elems.brushsize.removeClass("small medium large").addClass("exact");
+      }
+      else if (BRUSH === 1) {
+        $(channel).removeClass("exact medium large").addClass("small");
+        elems.brushsize.removeClass("exact medium large").addClass("small");
+      }
+      else if (BRUSH === 2) {
+        $(channel).removeClass("exact small large").addClass("medium");
+        elems.brushsize.removeClass("exact small large").addClass("medium");
+      }
+      else {
+        $(channel).removeClass("exact medium small").addClass("large");
+        elems.brushsize.removeClass("exact medium small").addClass("large");
       }
 
-      function invertSelection () {
-        vol.invertSelection();
-        UNDO.push('select');
-        render(true);
+      _needsrender = false;
+    }
+
+    function display_value(val) {
+      if (PARAMETERS.is_floating) {
+        return val.toFixed(4);
       }
-    </script>
-  </head>
-  <body>
-    <div id="infobar">
-      <span id="axis"></span> <span id="magnification"></span> <span id="coord"></span> <span id="realcoord"></span> <span id="pxvalue"></span> 
-      <br> 
-      Last Click: <span id="clickcoord"></span> <span id="clickrealcoord"></span> <span id="clickpxvalue"></span>  <span id="loading"></span>
-    </div>
+      else if ( // color image
+        PARAMETERS.layer_type == "image" && PARAMETERS.data_bytes == 4
+      ) {
+        return `${val} rgb: <${val & 0xff}, ${(val >> 8) & 0xff}, ${(val >> 16) & 0xff}>`;
+      }
+      return val;
+    }
 
-    <div id="show-sidebar" class="hidden">
-      <hr />
-      <hr />
-      <hr />
-    </div>
-    <div id="right-sidebar" class="hidden">
-      <div id="instructions">
-        <div id="basic-info">
-          <span id="cloudpath"></span> 
-          <p>DIMENSIONS</p>
-          shape: <span id="shape"></span> 
-          <br />
-          bounds: (<span id="bounds"></span>)
-          <br / >
-          dtype: <span id="dtype"></span>
-          <br />
-          resolution: <span id="resolution"></span> nm<sup>3</sup>
-          <br />
-          memory: <span id="memory-usage"></span>
-        </div>
+    function clamp(val, min, max) {
+      return Math.min(Math.max(val, min), max);
+    }
 
-        <p class="segmentation">SELECTION VISIBILITY</p>
-        <input class="segmentation" type="checkbox" id="show_hover" name="show_hover" checked="checked"/> <label class="segmentation" for="show_hover">Highlight (H)over?</label>
-        <input class="segmentation" type="checkbox" id="show_unselected" name="show_unselected" /> <label class="segmentation" for="show_unselected">Show (U)nselected?</label> <br />
-        <input class="segmentation" type="checkbox" id="paint_voxels" name="paint_voxels" /> <label class="segmentation" for="paint_voxels">Direct (P)aint?</label>
+    function loop() {
+      if (_needsrender) {
+        hardRender();
+      }
 
-        <p class="segmentation">BRUSH SIZE</p>
-        <div id="brush-tools" class="segmentation">
-          <div id="brush-size">
-            <div class="exact"></div>
-            <div class="small"></div>
-            <div class="medium"></div>
-            <div class="large"></div>
-          </div>
-          <button id="invert-selection" onclick="invertSelection()">invert selection</button>
-        </div>
+      requestAnimationFrame(loop);
+    }
 
-        <p class="segmentation">PAINT LABEL</p>
-        <div class="segmentation">
-          <input id="paintlabel" type="number" value="1" />
-        </div>
+    function saveNumpy() {
+      let d = new Date();
+      let filename = `image-${d.getFullYear()}-${d.getMonth()}-${d.getDay()}.npy`;
+      vol.getSegmentation().saveNumpy(filename);
+    }
 
-        <p class="segmentation">SELECTED SEGMENTS <button id="copy-segs">copy</button></p>
-        <div class="segmentation" id="selected_segments"></div>
-        <textarea id="addsegs" class="segmentation" type="text" placeholder="Input comma separated segids and press enter."></textarea>
+    function saveCrackle() {
+      let d = new Date();
+      let filename = `image-${d.getFullYear()}-${d.getMonth()}-${d.getDay()}.ckl`;
+      vol.getSegmentation().saveCrackle(filename);
+    }
 
-        <p class="segmentation">SAVE SEGMENTATION</p>
+    function invertSelection() {
+      vol.invertSelection();
+      UNDO.push('select');
+      render(true);
+    }
+  </script>
+</head>
 
-        <div class="segmentation">
-          <button id="save-numpy" onclick="saveNumpy()" title="Save as a .npy file. Might be big depending on your image size!">.npy</button> 
-          <button id="save-crackle" onclick="saveCrackle()" title="Save as a small .ckl file. There will be some processing time. Read more at https://github.com/seung-lab/crackle.">.ckl</button>
-        </div>
+<body>
+  <div id="infobar">
+    <span id="axis"></span> <span id="magnification"></span> <span id="coord"></span> <span id="realcoord"></span> <span
+      id="pxvalue"></span>
+    <br>
+    Last Click: <span id="clickcoord"></span> <span id="clickrealcoord"></span> <span id="clickpxvalue"></span> <span
+      id="loading"></span>
+  </div>
 
-        <p>CONTROLS</p>
-        <ul>
-          <li>W/S ,/. or scroll - advance selected images</li>
-          <li>A/D - switch slicing plane</li>
-          <li>Space - zoom in to point</li>
-          <li class='segmentation'>L - recolor segmentation labels</li>
-          <li>Left Click - <span class="segmentation">paint, </span>freeze info about current pixel</li>
-          <li class="segmentation">Right Click - erase</li>
-          <li class="segmentation">X - clear selected segments</li>
-          <li class="hyperview">left shift - hide segmentation</li>
-          <li class="hyperview">right shift - hide channel</li>
-          <li class="hyperview">+/- increase, decrease opacity</li>
-          <li class='segmentation'>H - toggle hover highlight</li>
-          <li class='segmentation'>U - toggle show unselected</li>
-          <li class='segmentation'>P - toggle direct voxel painting</li>
-          <li class='segmentation'>I - invert selection</li>
-          <li>1/2 - zoom out/in</li>
-          <li>M - show/hide menu</li>
-          <li class="segmentation">Q/E - decrease/increase brush size</li>
-          <li class="segmentation">ctrl+Z - undo</li>
-          <li class="segmentation">ctrl+shift+Z - redo</li>
-        </ul>
+  <div id="show-sidebar" class="hidden">
+    <hr />
+    <hr />
+    <hr />
+  </div>
+  <div id="right-sidebar" class="hidden">
+    <div id="instructions">
+      <div id="basic-info">
+        <span id="cloudpath"></span>
+        <p>DIMENSIONS</p>
+        shape: <span id="shape"></span>
+        <br />
+        bounds: (<span id="bounds"></span>)
+        <br />
+        dtype: <span id="dtype"></span>
+        <br />
+        resolution: <span id="resolution"></span> nm<sup>3</sup>
+        <br />
+        memory: <span id="memory-usage"></span>
       </div>
+
+      <p class="segmentation">SELECTION VISIBILITY</p>
+      <input class="segmentation" type="checkbox" id="show_hover" name="show_hover" checked="checked" /> <label
+        class="segmentation" for="show_hover">Highlight (H)over?</label>
+      <input class="segmentation" type="checkbox" id="show_unselected" name="show_unselected" /> <label
+        class="segmentation" for="show_unselected">Show (U)nselected?</label> <br />
+      <input class="segmentation" type="checkbox" id="paint_voxels" name="paint_voxels" /> <label class="segmentation"
+        for="paint_voxels">Direct (P)aint?</label>
+
+      <p class="segmentation">BRUSH SIZE</p>
+      <div id="brush-tools" class="segmentation">
+        <div id="brush-size">
+          <div class="exact"></div>
+          <div class="small"></div>
+          <div class="medium"></div>
+          <div class="large"></div>
+        </div>
+        <button id="invert-selection" onclick="invertSelection()">invert selection</button>
+      </div>
+
+      <p class="segmentation">PAINT LABEL</p>
+      <div class="segmentation">
+        <input id="paintlabel" type="number" value="1" />
+      </div>
+
+      <p class="segmentation">SELECTED SEGMENTS <button id="copy-segs">copy</button></p>
+      <div class="segmentation" id="selected_segments"></div>
+      <textarea id="addsegs" class="segmentation" type="text"
+        placeholder="Input comma separated segids and press enter."></textarea>
+
+      <p class="segmentation">SAVE SEGMENTATION</p>
+
+      <div class="segmentation">
+        <button id="save-numpy" onclick="saveNumpy()"
+          title="Save as a .npy file. Might be big depending on your image size!">.npy</button>
+        <button id="save-crackle" onclick="saveCrackle()"
+          title="Save as a small .ckl file. There will be some processing time. Read more at https://github.com/seung-lab/crackle.">.ckl</button>
+      </div>
+
+      <p>CONTROLS</p>
+      <ul>
+        <li>W/S ,/. or scroll - advance selected images</li>
+        <li>A/D - switch slicing plane</li>
+        <li>Space - zoom in to point</li>
+        <li class='segmentation'>L - recolor segmentation labels</li>
+        <li>Left Click - <span class="segmentation">paint, </span>freeze info about current pixel</li>
+        <li class="segmentation">Right Click - erase</li>
+        <li class="segmentation">X - clear selected segments</li>
+        <li class="hyperview">left shift - hide segmentation</li>
+        <li class="hyperview">right shift - hide channel</li>
+        <li class="hyperview">+/- increase, decrease opacity</li>
+        <li class='segmentation'>H - toggle hover highlight</li>
+        <li class='segmentation'>U - toggle show unselected</li>
+        <li class='segmentation'>P - toggle direct voxel painting</li>
+        <li class='segmentation'>I - invert selection</li>
+        <li>1/2 - zoom out/in</li>
+        <li>M - show/hide menu</li>
+        <li class="segmentation">Q/E - decrease/increase brush size</li>
+        <li class="segmentation">ctrl+Z - undo</li>
+        <li class="segmentation">ctrl+shift+Z - redo</li>
+      </ul>
     </div>
+  </div>
 
-    <canvas oncontextmenu="return false;" id="channel" class="exact" width="256" height="256"></canvas>
+  <canvas oncontextmenu="return false;" id="channel" class="exact" width="256" height="256"></canvas>
 
-  </body>
+</body>
+
 </html>

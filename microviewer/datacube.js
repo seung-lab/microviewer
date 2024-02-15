@@ -1,5 +1,5 @@
 class MonoVolume {
-  constructor (channel) {
+  constructor(channel) {
     this.channel = channel;
     this.colors = this.createColors();
     this.assigned_colors = {};
@@ -14,29 +14,29 @@ class MonoVolume {
     };
   }
 
-  get(x,y,z) {
-    return this.channel.get(x,y,z);
+  get(x, y, z) {
+    return this.channel.get(x, y, z);
   }
 
-  loaded () {
+  loaded() {
     return this.channel.loaded;
   }
 
-  progress () {
+  progress() {
     return this.channel.progress;
   }
 
-  initializeColorAssignments (cube) {
+  initializeColorAssignments(cube) {
     this.assigned_colors = new Uint32Array(this.renumbering.length);
     this.shuffleColors();
   }
 
-  shuffleColors () {
-    let colors = this.colors; 
+  shuffleColors() {
+    let colors = this.colors;
     const num_colors = colors.length;
 
     for (let segid in this.assigned_colors) {
-      this.assigned_colors[segid] = colors[ 
+      this.assigned_colors[segid] = colors[
         ((Math.random() * 1000) | 0) % num_colors
       ];
     }
@@ -45,7 +45,7 @@ class MonoVolume {
     this.cache.valid = false;
   }
 
-  createColors (opacity=1) {
+  createColors(opacity = 1) {
     let colors = [
       { r: 17, g: 47, b: 65 }, // forest green
       { r: 6, g: 133, b: 135 }, // leaf green
@@ -78,7 +78,7 @@ class MonoVolume {
         | color.r << 0
       );
     }
-    
+
     return (
       (255 * color.a * opacity) << 0
       | color.b << 8
@@ -86,26 +86,26 @@ class MonoVolume {
       | color.r << 24
     );
   }
-  
-  load (url, progressfn) {
+
+  load(url, progressfn) {
     let _this = this;
 
     return binary_get(url, function (progress) {
       _this.channel.progress = progress;
     })
-    .then(function (array_buffer) {
-      let ArrayType = _this.channel.arrayType();
-      _this.channel.cube = new ArrayType(array_buffer);
-      _this.channel.loaded = true;
-      _this.channel.progress = 1;
-      _this.channel.normalized = false;
-      _this.cache.valid = false;
+      .then(function (array_buffer) {
+        let ArrayType = _this.channel.arrayType();
+        _this.channel.cube = new ArrayType(array_buffer);
+        _this.channel.loaded = true;
+        _this.channel.progress = 1;
+        _this.channel.normalized = false;
+        _this.cache.valid = false;
 
-      return _this.channel;
-    });
+        return _this.channel;
+      });
   }
 
-  render (ctx, axis, slice) {
+  render(ctx, axis, slice) {
     if (this.channel.bytes === 1) {
       return this.renderChannelSlice(ctx, axis, slice);
     }
@@ -128,13 +128,13 @@ class MonoVolume {
    *
    * Return: segid, w/ side effect of drawing on ctx
    */
-  renderChannelSlice (ctx, axis, slice) {
+  renderChannelSlice(ctx, axis, slice) {
     let _this = this;
     this.channel.renderGrayImageSlice(ctx, axis, slice);
     return this;
   }
 
-  renderImageSlice (ctx, axis, slice) {
+  renderImageSlice(ctx, axis, slice) {
     this.channel.renderImageSlice(ctx, axis, slice);
     return this;
   }
@@ -142,7 +142,7 @@ class MonoVolume {
 
 // Represents a segmentation volume alone
 class SegmentationVolume extends MonoVolume {
-  constructor (datacube) {
+  constructor(datacube) {
     super(datacube);
     this.segments = {};
     this.renumbering = new datacube.cube.constructor(1);
@@ -153,14 +153,14 @@ class SegmentationVolume extends MonoVolume {
     this.max_label = 0;
   }
 
-  selected () {
+  selected() {
     let _this = this;
     return Object.keys(_this.segments)
-      .filter( (segid) => _this.segments[segid] )
-      .map( (segid) => _this.renumbering[segid] );
+      .filter((segid) => _this.segments[segid])
+      .map((segid) => _this.renumbering[segid]);
   }
 
-  getInvertedSelection () {
+  getInvertedSelection() {
     let _this = this;
     let new_selection = {};
     for (let i = _this.renumbering.length - 1; i >= 0; i--) {
@@ -175,27 +175,27 @@ class SegmentationVolume extends MonoVolume {
     return new_selection;
   }
 
-  invertSelection () {
+  invertSelection() {
     this.segments = this.getInvertedSelection();
   }
 
-  get(x,y,z) {
-    return this.renumbering[this.channel.get(x,y,z)];
+  get(x, y, z) {
+    return this.renumbering[this.channel.get(x, y, z)];
   }
 
-  getSegmentation () {
+  getSegmentation() {
     return this.channel;
   }
 
-  clearSelected () {
+  clearSelected() {
     this.segments = {};
   }
 
-  load (url, progressfn) {
+  load(url, progressfn) {
     const _this = this;
     return super.load(url, progressfn)
-      .then(function () { 
-        [ _this.renumbering, _this.max_label ] = renumber(_this.channel.cube);
+      .then(function () {
+        [_this.renumbering, _this.max_label] = renumber(_this.channel.cube);
         _this.initializeColorAssignments(_this.channel.cube);
 
         for (const [key, value] of Object.entries(_this.renumbering)) {
@@ -216,7 +216,7 @@ class SegmentationVolume extends MonoVolume {
 
     if (cache.valid
       && cache.pixels
-      && cache.axis === axis 
+      && cache.axis === axis
       && cache.slice === slice
       && (!hover_enabled || (cache.segid === hover_id))) {
 
@@ -245,7 +245,7 @@ class SegmentationVolume extends MonoVolume {
     });
 
     // We sometimes disable the hover highlight to get more performance
-    if (hover_enabled) { 
+    if (hover_enabled) {
       if (show_unselected) {
         for (let i = pixels32.length - 1; i >= 0; i--) {
           if (seg_slice[i]) {
@@ -270,12 +270,12 @@ class SegmentationVolume extends MonoVolume {
         }
       }
     }
-    else { 
+    else {
       for (let i = pixels32.length - 1; i >= 0; i--) {
         if (seg_slice[i] && (show_all | segments[seg_slice[i]])) {
           pixels32[i] = color_assignments[seg_slice[i]];
         }
-      }      
+      }
     }
 
     ctx.putImageData(pixels, 0, 0);
@@ -302,9 +302,9 @@ class SegmentationVolume extends MonoVolume {
    *
    * Return: segid
    */
-  toggleSegment (axis, slice, normx, normy) {
+  toggleSegment(axis, slice, normx, normy) {
     let _this = this;
-    let x,y,z;
+    let x, y, z;
 
     let sizex = _this.getSegmentation().size.x,
       sizey = _this.getSegmentation().size.y,
@@ -312,18 +312,18 @@ class SegmentationVolume extends MonoVolume {
 
     if (axis === 'x') {
       x = slice,
-      y = normx * sizey,
-      z = normy * sizez;
+        y = normx * sizey,
+        z = normy * sizez;
     }
     else if (axis === 'y') {
       x = normx * sizex,
-      y = slice,
-      z = normy * sizez;
+        y = slice,
+        z = normy * sizez;
     }
     else if (axis === 'z') {
       x = normx * sizex,
-      y = normy * sizey,
-      z = slice;
+        y = normy * sizey,
+        z = slice;
     }
 
     x = Math.floor(x);
@@ -331,7 +331,7 @@ class SegmentationVolume extends MonoVolume {
     z = Math.floor(z);
 
     let segid = _this.getSegmentation().get(x, y, z);
-    
+
     if (segid > 0) {
       _this.segments[segid] = !_this.segments[segid];
     }
@@ -360,9 +360,9 @@ class SegmentationVolume extends MonoVolume {
    *
    * Return: [ segids ]
    */
-  getSegsInCircle (axis, slice, dx, dy, cx, cy) {
+  getSegsInCircle(axis, slice, dx, dy, cx, cy) {
     let _this = this;
-    let [ width, height ] = _this.getSegmentation().faceDimensions(axis);
+    let [width, height] = _this.getSegmentation().faceDimensions(axis);
 
     // Nullify anything outside the ellipse. Just like a GRE problem.
 
@@ -384,7 +384,7 @@ class SegmentationVolume extends MonoVolume {
       y0 = Math.max(0, Math.trunc(cy - ry) + 0.5),
       yf = Math.min(width, Math.trunc(cy + ry) + 0.5);
 
-    const ZERO = _this.getSegmentation().cast(0); 
+    const ZERO = _this.getSegmentation().cast(0);
     let segid = ZERO,
       bounds_test = 0.0;
 
@@ -399,7 +399,7 @@ class SegmentationVolume extends MonoVolume {
       for (var y = y0; y <= yf; y++) {
         bounds_test = ((x - cx) * (x - cx) / rx2) + ((y - cy) * (y - cy) / ry2);
         if (bounds_test < 1) {
-          segid = buffer[(x|0) + width * (y|0)] | ZERO;
+          segid = buffer[(x | 0) + width * (y | 0)] | ZERO;
           segids[segid] = true;
         }
       }
@@ -407,7 +407,7 @@ class SegmentationVolume extends MonoVolume {
 
     delete segids[0];
 
-    return Object.keys(segids).map( (segid) => parseInt(segid, 10) );
+    return Object.keys(segids).map((segid) => parseInt(segid, 10));
   }
 
   selectSegsInCircle(axis, slice, dx, dy, cx, cy) {
@@ -428,14 +428,14 @@ class SegmentationVolume extends MonoVolume {
 
   paintCircle(axis, slice, dx, dy, cx, cy, label) {
     let _this = this;
-    let [ width, height ] = _this.getSegmentation().faceDimensions(axis);
+    let [width, height] = _this.getSegmentation().faceDimensions(axis);
 
     label = _this.getSegmentation().cast(label);
 
     if (_this.inverse_renumbering[label] === undefined) {
       _this.renumbering[_this.max_label] = label;
       _this.inverse_renumbering[label] = _this.max_label;
-      _this.assigned_colors[_this.max_label] = _this.colorToUint32({r:0,g:230,b:0}, 1);
+      _this.assigned_colors[_this.max_label] = _this.colorToUint32({ r: 0, g: 230, b: 0 }, 1);
       _this.max_label++;
     }
     label = _this.inverse_renumbering[label];
@@ -473,7 +473,7 @@ class SegmentationVolume extends MonoVolume {
         for (var x = x0; x <= xf; x++) {
           bounds_test = ((x - cx) * (x - cx) / rx2) + ((y - cy) * (y - cy) / ry2);
           if (bounds_test < 1) {
-            cube[(x|0) + sx * ((y|0) + sy * (slice|0))] = label;
+            cube[(x | 0) + sx * ((y | 0) + sy * (slice | 0))] = label;
           }
         }
       }
@@ -483,7 +483,7 @@ class SegmentationVolume extends MonoVolume {
         for (var x = x0; x <= xf; x++) {
           bounds_test = ((x - cx) * (x - cx) / rx2) + ((z - cy) * (z - cy) / ry2);
           if (bounds_test < 1) {
-            cube[(x|0) + sx * ((slice|0) + sy * (z|0))] = label;
+            cube[(x | 0) + sx * ((slice | 0) + sy * (z | 0))] = label;
           }
         }
       }
@@ -493,7 +493,7 @@ class SegmentationVolume extends MonoVolume {
         for (var y = x0; y <= xf; y++) {
           bounds_test = ((y - cx) * (y - cx) / rx2) + ((z - cy) * (z - cy) / ry2);
           if (bounds_test < 1) {
-            cube[(slice|0) + sx * ((y|0) + sy * (z|0))] = label;
+            cube[(slice | 0) + sx * ((y | 0) + sy * (z | 0))] = label;
           }
         }
       }
@@ -503,7 +503,7 @@ class SegmentationVolume extends MonoVolume {
     }
   }
 
-  destructivelyMergeSelection () {
+  destructivelyMergeSelection() {
     let segments = this.segments;
     let segarray = new Uint8Array(this.renumbering.length);
     let min_label = 9999999999;
@@ -530,7 +530,7 @@ class SegmentationVolume extends MonoVolume {
     segments[`${min_label}`] = true;
   }
 
-  destructivelyEraseSelection () {
+  destructivelyEraseSelection() {
     let segments = this.segments;
     let segarray = new Uint8Array(this.renumbering.length);
     Object.keys(segments).forEach((label) => {
@@ -562,7 +562,7 @@ class SegmentationVolume extends MonoVolume {
  * Return: HyperVolume object
  */
 class HyperVolume extends SegmentationVolume {
-  constructor (channel, segmentation) {
+  constructor(channel, segmentation) {
     super(segmentation);
     this.channel = channel; // a data cube
     this.segmentation = segmentation; // a segmentation cube
@@ -581,22 +581,22 @@ class HyperVolume extends SegmentationVolume {
     this.hide_segmentation = false;
   }
 
-  get(x,y,z) {
+  get(x, y, z) {
     return [
-      this.channel.get(x,y,z),
-      this.renumbering[this.segmentation.get(x,y,z)],
-     ]
+      this.channel.get(x, y, z),
+      this.renumbering[this.segmentation.get(x, y, z)],
+    ]
   }
 
-  getSegmentation () {
+  getSegmentation() {
     return this.segmentation;
   }
 
-  loaded () {
+  loaded() {
     return this.channel.loaded && this.segmentation.loaded;
   }
 
-  progress () {
+  progress() {
     let chan = this.channel;
     let seg = this.segmentation;
     return (chan.bytes * chan.progress + seg.bytes * seg.progress) / (chan.bytes + seg.bytes);
@@ -609,13 +609,13 @@ class HyperVolume extends SegmentationVolume {
    *
    * Return: promise representing download completion state
    */
-  load (progressfn) {
+  load(progressfn) {
     let _this = this;
 
     let channel_promise = binary_get('/channel', function (ratio) {
-        _this.channel.progress = ratio;
-        progressfn(ratio);
-      })
+      _this.channel.progress = ratio;
+      progressfn(ratio);
+    })
       .then(function (array_buffer) {
         let ArrayType = _this.channel.arrayType();
         _this.channel.cube = new ArrayType(array_buffer);
@@ -628,9 +628,9 @@ class HyperVolume extends SegmentationVolume {
       });
 
     let seg_promise = binary_get('/segmentation', function (ratio) {
-        _this.segmentation.progress = ratio;
-        progressfn(ratio);
-      })      
+      _this.segmentation.progress = ratio;
+      progressfn(ratio);
+    })
       .then(function (array_buffer) {
         let ArrayType = _this.segmentation.arrayType();
         _this.segmentation.cube = new ArrayType(array_buffer);
@@ -639,7 +639,7 @@ class HyperVolume extends SegmentationVolume {
         _this.segmentation.normalized = false;
         _this.cache.valid = false;
 
-        [ _this.renumbering, _this.max_label ] = renumber(_this.segmentation.cube);
+        [_this.renumbering, _this.max_label] = renumber(_this.segmentation.cube);
         _this.initializeColorAssignments(_this.segmentation.cube);
 
         for (const [key, value] of Object.entries(_this.renumbering)) {
@@ -650,7 +650,7 @@ class HyperVolume extends SegmentationVolume {
         return _this.segmentation;
       });
 
-    return Promise.all([ channel_promise, seg_promise ]);
+    return Promise.all([channel_promise, seg_promise]);
   }
 
   /* renderChannelSlice
@@ -666,7 +666,7 @@ class HyperVolume extends SegmentationVolume {
    *
    * Return: segid, w/ side effect of drawing on ctx
    */
-  render (ctx, axis, slice) {
+  render(ctx, axis, slice) {
     let _this = this;
 
     let pixels;
@@ -782,14 +782,14 @@ class HyperVolume extends SegmentationVolume {
 }
 
 class CachedImageData {
-  constructor (context) {
+  constructor(context) {
     this.context = context;
     this.cache = null;
   }
 
   getImageData(width, height) {
     if (!this.cache || this.cache.width !== width || this.cache.height !== height) {
-        this.cache = this.context.createImageData(width, height);
+      this.cache = this.context.createImageData(width, height);
     }
 
     return this.cache;
@@ -812,7 +812,7 @@ class CachedImageData {
  * Return: self
  */
 class DataCube {
-  constructor (args) {
+  constructor(args) {
     this.bytes = args.bytes || 1;
     this.size = args.size || { x: 256, y: 256, z: 256 };
     this.cube = this.materialize();
@@ -825,19 +825,19 @@ class DataCube {
     this.progress = 0;
 
     this.faces = {
-      x: [ 'y', 'z' ],
-      y: [ 'x', 'z' ],
-      z: [ 'x', 'y' ],
+      x: ['y', 'z'],
+      y: ['x', 'z'],
+      z: ['x', 'y'],
     };
   }
 
-  cast (num) {
+  cast(num) {
     return (this.cube instanceof BigUint64Array)
       ? BigInt(num)
       : Number(num);
   }
 
-  faceDimensions (axis) {
+  faceDimensions(axis) {
     let face = this.faces[axis];
     return [
       this.size[face[0]],
@@ -845,7 +845,7 @@ class DataCube {
     ];
   }
 
-  numpyHeader () {
+  numpyHeader() {
     const dtype = `<u${this.bytes}`;
     const shape = `${this.size.x},${this.size.y},${this.size.z}`;
     const header = `{"descr": "${dtype}", "fortran_order": True, "shape": (${shape}), }`;
@@ -853,8 +853,8 @@ class DataCube {
     const headerBytes = encoder.encode(header);
 
     // \x93NUMPY\x01\x00
-    const magic = [0x93, 0x4E, 0x55, 0x4D, 0x50, 0x59, 0x01, 0x00]; 
-    let headerLength = headerBytes.length + 10; 
+    const magic = [0x93, 0x4E, 0x55, 0x4D, 0x50, 0x59, 0x01, 0x00];
+    let headerLength = headerBytes.length + 10;
 
     // align to 64 bytes and fill with spaces 0x20
     headerLength = Math.ceil(headerLength / 64) * 64;
@@ -869,7 +869,7 @@ class DataCube {
     return combinedBytes;
   }
 
-  saveNumpy (filename) {
+  saveNumpy(filename) {
     const npyHeader = this.numpyHeader();
     // Create a combined array of header and data bytes
     const combinedBytes = new Uint8Array(npyHeader.length + this.cube.byteLength);
@@ -888,8 +888,8 @@ class DataCube {
     this.save(filename, buffer);
   }
 
-  save (filename, buffer) {
-    const blob = new Blob([ buffer.buffer ]);
+  save(filename, buffer) {
+    const blob = new Blob([buffer.buffer]);
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = filename;
@@ -900,7 +900,7 @@ class DataCube {
   }
 
   // for internal use, makes a canvas for blitting images to
-  createImageContext () {
+  createImageContext() {
     let canvas = document.createElement('canvas');
     canvas.width = this.size.x;
     canvas.height = this.size.y;
@@ -909,7 +909,7 @@ class DataCube {
   }
 
   // for internal use, creates the data cube of the correct data type and size
-  materialize () {
+  materialize() {
     let ArrayType = this.arrayType();
 
     let size = this.size;
@@ -925,7 +925,7 @@ class DataCube {
    *   
    * Return: this
    */
-  clear () {
+  clear() {
     this.cube.fill(0);
     this.clean = true;
     this.loaded = false;
@@ -949,7 +949,7 @@ class DataCube {
    *
    * Return: this
    */
-  insertSquare (
+  insertSquare(
     square, axis, slice
   ) {
     let _this = this;
@@ -1000,7 +1000,7 @@ class DataCube {
    *
    * Return: this
    */
-  insertCanvas (canvas, offsetx = 0, offsety = 0, offsetz = 0) {
+  insertCanvas(canvas, offsetx = 0, offsety = 0, offsetz = 0) {
     let ctx = canvas.getContext('2d');
     let imgdata = ctx.getImageData(0, 0, canvas.width, canvas.height);
     return this.insertImageData(imgdata, canvas.width, offsetx, offsety, offsetz);
@@ -1018,7 +1018,7 @@ class DataCube {
    *
    * Return: this
    */
-  insertImage (img, offsetx = 0, offsety = 0, offsetz = 0) {
+  insertImage(img, offsetx = 0, offsety = 0, offsetz = 0) {
     this.canvas_context.drawImage(img, 0, 0);
     let imgdata = this.canvas_context.getImageData(0, 0, img.width, img.height);
     return this.insertImageData(imgdata, img.width, offsetx, offsety, offsetz);
@@ -1037,7 +1037,7 @@ class DataCube {
    *
    * Return: this
    */
-  insertImageData (imgdata, width, offsetx, offsety, offsetz) {
+  insertImageData(imgdata, width, offsetx, offsety, offsetz) {
     let _this = this;
 
     let pixels = imgdata.data; // Uint8ClampedArray
@@ -1059,23 +1059,23 @@ class DataCube {
       false: {
         1: 0xff000000,
         2: 0xffff0000,
-        4: 0xffffffff,        
+        4: 0xffffffff,
       },
     };
 
     const mask = masks[this.isLittleEndian()][this.bytes];
-    
+
     let x = 0, y = 0;
-    
+
     const sizex = _this.size.x | 0,
-        zadj = (offsetz * _this.size.x * _this.size.y) | 0;
-    
+      zadj = (offsetz * _this.size.x * _this.size.y) | 0;
+
     for (y = width - 1; y >= 0; y--) {
       for (x = width - 1; x >= 0; x--) {
-      
+
         _this.cube[
           (offsetx + x) + sizex * (offsety + y) + zadj
-        ] = data32[ x + y * width ] & mask;
+        ] = data32[x + y * width] & mask;
       }
     }
 
@@ -1099,7 +1099,7 @@ class DataCube {
    *
    * Return: value
    */
-  get (x, y, z) {
+  get(x, y, z) {
     return this.cube[x + this.size.x * (y + this.size.y * z)];
   }
 
@@ -1121,7 +1121,7 @@ class DataCube {
    *
    * Return: 1d array
    */
-  slice (axis, index, copy = true) {
+  slice(axis, index, copy = true) {
     let _this = this;
 
     if (index < 0 || index >= this.size[axis]) {
@@ -1143,7 +1143,7 @@ class DataCube {
       if (copy) {
         let buf = _this.cube.buffer.slice(byteoffset, byteoffset + xysize * this.bytes);
         return new ArrayType(buf);
-      } 
+      }
       else {
         return new ArrayType(_this.cube.buffer, byteoffset, xysize);
       }
@@ -1168,7 +1168,7 @@ class DataCube {
       // as 256 x are consecutive, but no memcpy in browser.
       const yoffset = xsize * index;
       for (let z = zsize - 1; z >= 0; --z) {
-        for (let x = xsize - 1; x >= 0; --x) { 
+        for (let x = xsize - 1; x >= 0; --x) {
           square[i] = _this.cube[x + yoffset + xysize * z];
           --i;
         }
@@ -1189,7 +1189,7 @@ class DataCube {
    *
    * Return: imagedata
    */
-  imageSlice (axis, index, copy=true) {
+  imageSlice(axis, index, copy = true) {
     let _this = this;
 
     let square = this.slice(axis, index, /*copy=*/false);
@@ -1215,12 +1215,12 @@ class DataCube {
 
     if (this.bytes < 4) {
       for (let i = square.length - 1; i >= 0; i--) {
-        data32[i] = square[i] | alphamask; 
+        data32[i] = square[i] | alphamask;
       }
     }
     else {
       for (let i = square.length - 1; i >= 0; i--) {
-        data32[i] = square[i]; 
+        data32[i] = square[i];
       }
     }
 
@@ -1241,7 +1241,7 @@ class DataCube {
    *
    * Return: imagedata
    */
-  grayImageSlice (axis, index, transparency=false, copy=true) {
+  grayImageSlice(axis, index, transparency = false, copy = true) {
     let _this = this;
 
     let square = this.slice(axis, index, /*copy=*/false);
@@ -1254,7 +1254,7 @@ class DataCube {
 
     let data32 = new Uint32Array(imgdata.data.buffer);
 
-    const alpha = this.isLittleEndian() 
+    const alpha = this.isLittleEndian()
       ? 0xff000000
       : 0x000000ff;
 
@@ -1286,7 +1286,7 @@ class DataCube {
    *   
    * Return: this
    */
-  renderImageSlice (context, axis, index) {
+  renderImageSlice(context, axis, index) {
     var imgdata = this.imageSlice(axis, index, false);
     context.putImageData(imgdata, 0, 0);
     return this;
@@ -1304,14 +1304,14 @@ class DataCube {
    *   
    * Return: this
    */
-  renderGrayImageSlice (context, axis, index) {
+  renderGrayImageSlice(context, axis, index) {
     var imgdata = this.grayImageSlice(axis, index, /*transparent=*/false, /*copy=*/false);
     context.putImageData(imgdata, 0, 0);
     return this;
   }
 
   // http://stackoverflow.com/questions/504030/javascript-endian-encoding
-  isLittleEndian () {
+  isLittleEndian() {
     var arr32 = new Uint32Array(1);
     var arr8 = new Uint8Array(arr32.buffer);
     arr32[0] = 255;
@@ -1325,7 +1325,7 @@ class DataCube {
 
   // For internal use, return the right bitmask for rgba image slicing
   // depending on CPU endianess.
-  getRenderMaskSet () {
+  getRenderMaskSet() {
     let bitmasks = {
       true: { // little endian, most architectures
         r: 0x000000ff,
@@ -1353,7 +1353,7 @@ class DataCube {
    *   
    * Return: one of Uint8Array, Uint16Array, or Uint32Array
    */
-  arrayType () {
+  arrayType() {
     let choices = {
       1: Uint8Array,
       2: Uint16Array,
@@ -1372,7 +1372,7 @@ class DataCube {
 }
 
 class BooleanDataCube extends DataCube {
-  constructor (args) {
+  constructor(args) {
     args.bytes = 1;
     super(args);
   }
@@ -1391,7 +1391,7 @@ class BooleanDataCube extends DataCube {
    *
    * Return: imagedata
    */
-  grayImageSlice (axis, index, transparency=false, copy=true) {
+  grayImageSlice(axis, index, transparency = false, copy = true) {
     let _this = this;
 
     let square = this.slice(axis, index, /*copy=*/false);
@@ -1403,7 +1403,7 @@ class BooleanDataCube extends DataCube {
 
     let data32 = new Uint32Array(imgdata.data.buffer);
 
-    const alpha = this.isLittleEndian() 
+    const alpha = this.isLittleEndian()
       ? 0xff000000
       : 0x000000ff;
 
@@ -1428,7 +1428,7 @@ class BooleanDataCube extends DataCube {
 }
 
 class FloatingPointDataCube extends DataCube {
-  constructor (args) {
+  constructor(args) {
     super(args);
     this.minval = -Infinity;
     this.maxval = +Infinity;
@@ -1438,13 +1438,13 @@ class FloatingPointDataCube extends DataCube {
     this.normalized = false;
   }
 
-  renormalize () {
+  renormalize() {
     let _this = this;
     let minval = +Infinity;
     let maxval = -Infinity;
 
     const cube = _this.cube;
-    
+
     for (let i = cube.length - 1; i >= 0; i--) {
       if (!isFinite(cube[i])) {
         this.finite = false;
@@ -1468,7 +1468,7 @@ class FloatingPointDataCube extends DataCube {
     this.normalized = true;
   }
 
-  grayImageSlice (axis, index, transparency=false, copy=true) {
+  grayImageSlice(axis, index, transparency = false, copy = true) {
     return this.imageSlice(axis, index, transparency, copy);
   }
 
@@ -1486,7 +1486,7 @@ class FloatingPointDataCube extends DataCube {
    *
    * Return: imagedata
    */
-  imageSlice (axis, index, transparency=false, copy=true) {
+  imageSlice(axis, index, transparency = false, copy = true) {
     let _this = this;
 
     if (!this.normalized) {
@@ -1503,12 +1503,12 @@ class FloatingPointDataCube extends DataCube {
 
     let data32 = new Uint32Array(imgdata.data.buffer);
 
-    const alpha = this.isLittleEndian() 
+    const alpha = this.isLittleEndian()
       ? 0xff000000
       : 0x000000ff;
 
     let i = 0;
-    let val = 0|0;
+    let val = 0 | 0;
     const black = transparency ? 0x00000000 : alpha;
 
     if (this.minval === this.maxval) {
@@ -1519,9 +1519,9 @@ class FloatingPointDataCube extends DataCube {
           data32[i] = black;
         }
         else {
-          data32[i] = val;          
+          data32[i] = val;
         }
-      } 
+      }
       return imgdata;
     }
 
@@ -1541,50 +1541,50 @@ class FloatingPointDataCube extends DataCube {
       }
     }
     else if (!this.finite && !this.nan) {
-     for (i = square.length - 1; i >= 0; i--) {
+      for (i = square.length - 1; i >= 0; i--) {
         if (isFinite(square[i])) {
           val = (square[i] * norm - minval) | 0;
           data32[i] = (val | val << 8 | val << 16 | alpha);
         }
         else {
-          data32[i] = (square[i] === +Infinity) 
-            ? 0xffffffff 
+          data32[i] = (square[i] === +Infinity)
+            ? 0xffffffff
             : alpha;
-        }        
-      } 
+        }
+      }
     }
     else if (this.finite && this.nan) {
-     for (i = square.length - 1; i >= 0; i--) {
+      for (i = square.length - 1; i >= 0; i--) {
         if (isNaN(square[i])) {
           data32[i] = alpha;
         }
         else {
-          val = (square[i] * norm - minval) | 0; 
-          data32[i] = (val | val << 8 | val << 16 | alpha);        
+          val = (square[i] * norm - minval) | 0;
+          data32[i] = (val | val << 8 | val << 16 | alpha);
         }
-      } 
+      }
     }
     else if (!this.finite && this.nan) {
-     for (i = square.length - 1; i >= 0; i--) {
+      for (i = square.length - 1; i >= 0; i--) {
         if (isNaN(square[i])) {
           data32[i] = alpha;
         }
         else if (isFinite(square[i])) {
-          val = (square[i] * norm - minval) | 0; 
+          val = (square[i] * norm - minval) | 0;
           data32[i] = (val | val << 8 | val << 16 | alpha);
         }
         else {
-          data32[i] = (square[i] === +Infinity) 
-            ? 0xffffffff 
+          data32[i] = (square[i] === +Infinity)
+            ? 0xffffffff
             : alpha;
-        }     
+        }
       }
     }
 
     return imgdata;
   }
 
-  arrayType () {
+  arrayType() {
     let choices = {
       4: Float32Array,
       8: Float64Array,
@@ -1600,7 +1600,7 @@ class FloatingPointDataCube extends DataCube {
   }
 }
 
-function binary_get (url, progressfn) {
+function binary_get(url, progressfn) {
   return new Promise(function (fufill, reject) {
     let req = new XMLHttpRequest();
     req.open("GET", url, true);
@@ -1628,9 +1628,9 @@ function binary_get (url, progressfn) {
   });
 }
 
-function renumber (cube) {
+function renumber(cube) {
   let assignments = new Map();
-  
+
   let cast = (cube instanceof BigUint64Array)
     ? BigInt
     : Number;
@@ -1678,7 +1678,7 @@ function renumber (cube) {
     renumbering[remap] = label;
   }
 
-  return [ renumbering, next_label ];
+  return [renumbering, next_label];
 }
 
 

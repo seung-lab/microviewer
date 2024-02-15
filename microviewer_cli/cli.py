@@ -8,18 +8,21 @@ import click
 import microviewer
 import numpy as np
 
+
 class Tuple234(click.ParamType):
   """A command line option type consisting of 3 comma-separated integers."""
   name = 'tuple234'
+
   def convert(self, value, param, ctx):
     if isinstance(value, str):
       try:
         value = tuple(map(int, value.split(',')))
       except ValueError:
         self.fail(f"'{value}' does not contain a comma delimited list of 3 or 4 integers.")
-      if len(value) not in (2,3,4):
+      if len(value) not in (2, 3, 4):
         self.fail(f"'{value}' does not contain a comma delimited list of 3 or 4 integers.")
     return value
+
 
 def normalize_file_ext(filename):
   filename, ext = os.path.splitext(filename)
@@ -37,26 +40,22 @@ def normalize_file_ext(filename):
       return ext
     ext = ext2
 
+
 def load_bytesio(filelike):
   if hasattr(filelike, 'read'):
     binary = filelike.read()
-  elif (
-    isinstance(filelike, str) 
-    and os.path.splitext(filelike)[1] == '.gz'
-  ):
+  elif (isinstance(filelike, str) and os.path.splitext(filelike)[1] == '.gz'):
     with gzip.open(filelike, 'rb') as f:
       binary = f.read()
-  elif (
-    isinstance(filelike, str) 
-    and os.path.splitext(filelike)[1] in ('.lzma', '.xz')
-  ):
+  elif (isinstance(filelike, str) and os.path.splitext(filelike)[1] in ('.lzma', '.xz')):
     with lzma.open(filelike, 'rb') as f:
       binary = f.read()
   else:
     with open(filelike, 'rb') as f:
       binary = f.read()
-  
+
   return io.BytesIO(binary)
+
 
 # c/o https://stackoverflow.com/questions/64226337/is-there-a-way-to-read-npy-header-without-loading-the-whole-file
 def read_numpy_array_header(fobj):
@@ -65,21 +64,19 @@ def read_numpy_array_header(fobj):
   func = getattr(np.lib.format, func_name)
   return func(fobj)
 
+
 def load_numpy(src, shape, dtype, order):
   try:
     with open(src, "rb") as f:
       shape, forder, dtype = read_numpy_array_header(f)
-    return np.lib.format.open_memmap(
-      src, 
-      dtype=dtype, shape=shape, 
-      fortran_order=forder, mode="r"
-    )
+    return np.lib.format.open_memmap(src, dtype=dtype, shape=shape, fortran_order=forder, mode="r")
   except ValueError:
     if dtype is None or shape is None or order not in ("C", "F"):
       raise
     dtype = np.dtype(dtype)
 
   return np.memmap(src, dtype=dtype, shape=shape, order=order, mode="r")
+
 
 def load(filename, shape, dtype, order):
   binary = load_bytesio(filename)
@@ -102,6 +99,7 @@ def load(filename, shape, dtype, order):
 
   return image
 
+
 @click.command()
 @click.argument("image")
 @click.argument("segmentation", required=False, default=None)
@@ -111,11 +109,7 @@ def load(filename, shape, dtype, order):
 @click.option('--dtype', type=str, default=None, help="Set dtype manually for memmaps.", show_default=True)
 @click.option('--order', type=str, default="F", help="Set order manually for memmaps.", show_default=True)
 @click.option('--paint', is_flag=True, default=False, help="Create a blank segmentation for painting.", show_default=True)
-def main(
-  image, segmentation, 
-  seg, paint, browser, 
-  shape, dtype, order,
-):
+def main(image, segmentation, seg, paint, browser, shape, dtype, order):
   """
   View 3D images in the browser.
   """
@@ -141,24 +135,16 @@ def main(
     if not is_port_in_use(port):
       working_port = True
       break
-  
+
   if not working_port:
     print("Ports 8080 to 8090 are all in use.")
     return
 
   if segmentation is not None:
-    microviewer.hyperview(
-      image_np, segmentation_np, 
-      browser=browser, 
-      cloudpath=[ image, segmentation ],
-      port=port,
-    )
+    microviewer.hyperview(image_np, segmentation_np, browser=browser, cloudpath=[image, segmentation], port=port)
   else:
-    microviewer.view(
-      image_np, seg=seg, 
-      browser=browser, cloudpath=image,
-      port=port,
-    )
+    microviewer.view(image_np, seg=seg, browser=browser, cloudpath=image, port=port)
+
 
 # from: https://stackoverflow.com/questions/2470971/fast-way-to-test-if-a-port-is-in-use-using-python
 def is_port_in_use(port: int) -> bool:

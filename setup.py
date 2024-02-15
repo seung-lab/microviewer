@@ -7,10 +7,7 @@ setuptools.setup(
     "all_formats": ["nibabel", "crackle-codec"],
   },
   entry_points={
-    "console_scripts": [
-      "uview=microviewer_cli:main"
-    ],
+    "console_scripts": ["uview=microviewer_cli:main"],
   },
   pbr=True,
 )
-
