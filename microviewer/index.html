@@ -3,9 +3,19 @@
 
 <head>
   <title>μViewer</title>
+  <script src="https://accounts.google.com/gsi/client" onload="initTokenClient()" async defer></script>
   <script src="./jquery-3.7.0.min.js"></script>
+  <script src="./pako.min.js"></script>
+  <script src="./UPNG.js"></script>
   <script src="./crackle.js"></script>
   <script src="./datacube.js"></script>
+  <script>
+    const config = {
+      clientId: '349854005841-dpnhpllibup26ook2tibarhnd7d3r406.apps.googleusercontent.com',
+      scope: 'https://www.googleapis.com/auth/devstorage.read_write'
+    };
+    window.appConfig = config;
+  </script>
   <meta charset="utf-8">
 
   <link rel="preload" as="image" href="./cursors/exact.png">
@@ -391,6 +401,7 @@
           vol.getSegmentation().insertSquare(
             img2d, axis, slice
           );
+          setUploadProgress(0);
         }
         else {
           vol.segments = structuredClone(args[0]);
@@ -491,6 +502,7 @@
             let label = parseInt(elems.paintlabel.val());
             if (!isNaN(label)) {
               vol.paintCircle(AXIS, SLICE[AXIS], dx, dy, x, y, label);
+              setUploadProgress(0);
             }
           }
           else {
@@ -519,6 +531,7 @@
 
         if (elems.paintmode.prop("checked")) {
           vol.paintCircle(AXIS, SLICE[AXIS], dx, dy, x, y, 0);
+          setUploadProgress(0);
         }
         else {
           vol.eraseSegsInCircle(AXIS, SLICE[AXIS], dx, dy, x, y);
@@ -638,6 +651,262 @@
       elems.showsidebar.toggleClass("hidden");
     }
 
+    function setUploadProgress(progress) {
+      document.getElementById('gcsUploadProgress').setAttribute('value', progress);
+    }
+    function getUploadProgress() {
+      return document.getElementById('gcsUploadProgress').getAttribute('value');
+    }
+
+    function uploadJSON(json, gcsPath) {
+      const uploadJSON = new Promise((resolve, reject) => {
+        const path = parseGCSPath(gcsPath);
+        const gcsUrl = `https://www.googleapis.com/upload/storage/v1/b/${path.bucketName}/o?uploadType=media&name=${path.objectName}`;
+        fetch(gcsUrl, {
+          method: 'POST',
+          cache: 'no-cache',
+          headers: new Headers({
+            'Authorization': 'Bearer ' + ACCESS_TOKEN,
+            'Content-Type': 'application/json',
+          }),
+          body: JSON.stringify(json),
+        }).then(response => {
+          if (response.ok) {
+            resolve(response);
+          } else {
+            reject(response);
+          }
+        }).catch(error => {
+          reject(error);
+        })
+      });
+    }
+
+    function uploadPNG(arrayBuffer, gcsPath) {
+      return new Promise((resolve, reject) => {
+        const path = parseGCSPath(gcsPath);
+        const gcsUrl = `https://www.googleapis.com/upload/storage/v1/b/${path.bucketName}/o?uploadType=media&name=${path.objectName}`;
+        fetch(gcsUrl, {
+          method: 'POST',
+          cache: 'no-cache',
+          headers: new Headers({
+            'Authorization': 'Bearer ' + ACCESS_TOKEN,
+            'Content-Type': 'image/png',
+          }),
+          body: new Blob([arrayBuffer], { type: 'image/png' }),
+        }).then(response => {
+          if (response.ok) {
+            resolve(response);
+          } else {
+            reject(response);
+          }
+        }).catch(error => {
+          reject(error);
+        })
+      });
+    }
+
+    function uploadSegmentationToGCS() {
+      let d = new Date();
+      let backupName = `backup-${d.getFullYear()}-${d.getMonth()}-${d.getDay()}`;
+      let currentName = 'latest';
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const segPath = normalizeURL(urlParams.get('seg_path'));
+
+      const boundsStr = `${PARAMETERS.bounds[0]}-${PARAMETERS.bounds[3]}_${PARAMETERS.bounds[1]}-${PARAMETERS.bounds[4]}_${PARAMETERS.bounds[2]}-${PARAMETERS.bounds[5]}`;
+
+      const segVol = vol.getSegmentation()
+      const cubeview = new Uint8Array(segVol.cube.buffer, 0, segVol.cube.byteLength);
+      const arrayBuffer = UPNG.encodeLL([cubeview], segVol.size.x, segVol.size.y * segVol.size.z, 1, 0, 8);
+      setUploadProgress(0);
+
+      getToken().then((tokenResponse) => {
+        ACCESS_TOKEN = tokenResponse.access_token;
+        // Overwrite 'latest' segmentation
+        uploadPNG(arrayBuffer, `${segPath}/${currentName}/${boundsStr}`)
+          .then(() => setUploadProgress(getUploadProgress() + 45))
+          .catch(err => console.log(err));
+
+        // Upload copy of 'latest' segmentation as timestamped backup
+        uploadPNG(arrayBuffer, `${segPath}/${backupName}/${boundsStr}`)
+          .then(() => setUploadProgress(getUploadProgress() + 45))
+          .catch(err => console.log(err));
+
+        // Ensure info points to 'latest'
+        fetch(toHTTPS(segPath) + `/info?cacheBuster=${Date.now()}`, { cache: "no-cache" })
+          .then(response => response.json())
+          .then(data => {
+            data.scales[0].key = currentName;
+            uploadJSON(data, segPath + '/info')
+              .then(() => setUploadProgress(getUploadProgress() + 10))
+              .catch(err => console.log(err));
+          });
+      }).catch(err => console.log(err));
+    }
+
+    ACCESS_TOKEN = null;
+
+    function initTokenClient() {
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: appConfig.clientId,
+        scope: appConfig.scope,
+        callback: ""
+      });
+
+      document.getElementById('gcsUpload').disabled = false;
+      document.getElementById('gcsUploadProgress').style.display = 'block';
+    }
+
+    function getToken(force=false) {
+      // old Token should still be valid
+      if (force === false && Date.now() < localStorage.getItem('tokenExpires')) {
+        const tokenResponse = JSON.parse(localStorage.getItem('tokenResponse'));
+        return Promise.resolve(tokenResponse);
+      }
+
+      const tokenResponse = new Promise((resolve, reject) => {
+        try {
+          tokenClient.callback = (resp) => {
+            if (resp.error !== undefined) {
+              reject(resp.error);
+            } else {
+              localStorage.setItem('consent', 'true');
+              localStorage.setItem('tokenResponse', JSON.stringify(resp));
+              localStorage.setItem('tokenExpires', Date.now() + resp.expires_in * 1000);
+              resolve(resp);
+            }
+          };
+          if (localStorage.getItem('consent') !== 'true') {
+            tokenClient.requestAccessToken({ prompt: 'consent' });
+          } else {
+            tokenClient.requestAccessToken({ prompt: '' });
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      });
+      return tokenResponse;
+    }
+
+    // monkeypatching datacube.js to fetch the correct img and segmentation data
+    const original_binary_get = binary_get;
+    binary_get = (url, progressfn) => {
+      if (url.endsWith('/channel')) {
+        return new Promise((fulfill, reject) => {
+          const arrayBuffer = PARAMETERS.data[0].buffer;
+          fulfill(arrayBuffer);
+        });
+      }
+      if (url.endsWith('/segmentation')) {
+        return new Promise((fulfill, reject) => {
+          const arrayBuffer = PARAMETERS.data[1].buffer;
+          fulfill(arrayBuffer);
+        });
+      }
+      return original_binary_get(url, progressfn);
+    }
+
+    function downloadImageAsArrayBuffer(imageUrl, mimetype = "image/png") {
+      return fetch(`${imageUrl}?cacheBuster=${Date.now()}`, { cache: 'no-cache' })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Error while downloading ${imageUrl} Network response was not ok`);
+          }
+          return response.arrayBuffer();
+        })
+        .then(arrayBuffer => {
+          const blob = new Blob([arrayBuffer], { type: mimetype });
+          return createImageBitmap(blob);
+        })
+        .then(imageBitmap => {
+          const canvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
+          const context = canvas.getContext('2d', { alpha: false });
+          context.drawImage(imageBitmap, 0, 0);
+          return context.getImageData(0, 0, imageBitmap.width, imageBitmap.height).data.buffer;
+        })
+        .catch(error => {
+          console.error('There was a problem with the fetch operation:', error);
+        });
+    }
+
+    function toHTTPS(url) {
+      url = url.replace(/^gs:\/\//, 'https://storage.googleapis.com/');
+      return url;
+    }
+
+    function normalizeURL(url) {
+      url = url.replace(/^precomputed:\/\//, '');
+      url = url.replace(/\/+$/, '')  // remove trailing slashes
+      return url;
+    }
+
+    function getMIME(extension) {
+      if (extension === "jpeg") {
+        return "image/jpeg";
+      }
+      else if (extension === "png") {
+        return "image/png";
+      }
+      else {
+        throw new Error("Unsupported extension");
+      }
+    }
+
+    function parseGCSPath(gcsPath) {
+      let pathWithoutScheme = gcsPath.replace(/^gs:\/\//, '');
+      pathWithoutScheme = pathWithoutScheme.replace("^https://storage.googleapis.com\/", '');
+
+      const firstSlashIndex = pathWithoutScheme.indexOf('/');
+      const bucketName = pathWithoutScheme.substring(0, firstSlashIndex);
+      const remainingPath = firstSlashIndex !== -1 ? pathWithoutScheme.substring(firstSlashIndex + 1) : "";
+
+      return {
+        bucketName: bucketName,
+        objectName: remainingPath
+      };
+    }
+
+    function validatePrecomputedInfo(info) {
+      errors = []
+      if (info.scales.length !== 1) {
+        errors.push("Layer contains multiple resolutions. Only one is supported.")
+      }
+      if (info.data_type !== "uint8") {
+        errors.push("Data type must be uint8.")
+      }
+      if (info.num_channels !== 1) {
+        errors.push("Layer must have only one channel.")
+      }
+      if (info.type !== "image" && info.type !== "segmentation") {
+        errors.push("Layer must be of type image or segmentation.")
+      }
+      if (info.type == "segmentation" && info.scales[0].encoding !== "png") {
+        errors.push("Segmentation layer must be encoded as png.")
+      }
+      if (info.type == "image" && info.scales[0].encoding !== "jpeg" && info.scales[0].encoding !== "png") {
+        errors.push("Image layer must be encoded as jpeg or png.")
+      }
+      if (
+        (info.scales[0].size[0] !== info.scales[0].chunk_sizes[0][0]) ||
+        (info.scales[0].size[1] !== info.scales[0].chunk_sizes[0][1]) ||
+        (info.scales[0].size[2] !== info.scales[0].chunk_sizes[0][2])
+      ) {
+        errors.push("Currently entire volume must consist of a single chunk.")
+      }
+      if (info.scales[0].size[0] * info.scales[0].size[1] * info.scales[0].size[2] >= 2147483647) {
+        errors.push("Volume size must be less than 2 GVx.")
+      }
+      if (info.scales[0].size[1] * info.scales[0].size[2] > 65535) {
+        errors.push("Product of Y and Z dimension must be 65535 or less.")
+      }
+
+      if (errors.length > 0) {
+        throw new Error(errors.join("\n"));
+      }
+      return true
+    }
+
     $(document).ready(function () {
       elems = {
         cloudpath: $('#cloudpath'),
@@ -668,16 +937,90 @@
         memoryusage: $("#memory-usage"),
       };
 
+      const urlParams = new URLSearchParams(window.location.search);
+
+      const imgPath = normalizeURL(urlParams.get('img_path'));
+      const segPath = normalizeURL(urlParams.get('seg_path'));
+      const imgInfoPath = imgPath + '/info';
+      const segInfoPath = segPath + '/info';
+
+      SIZE = { x: 0, y: 0, z: 0 };
+      let data = {
+        viewtype: 'hyper',
+        cloudpath: [imgPath, segPath],
+        data_types: ["uint8", "uint8"],
+        data_bytes: [1, 1],
+        data: [null, null],
+        bounds: ['?', '?', '?', '?', '?', '?'],
+        resolution: ['?', '?', '?']
+      }
+
+      let imgReadyResolve, imgReadyReject;
+      let imgReady = new Promise((resolve, reject) => {
+        imgReadyResolve = resolve;
+        imgReadyReject = reject;
+      });
+
+      let segReadyResolve, segReadyReject;
+      let segReady = new Promise((resolve, reject) => {
+        segReadyResolve = resolve;
+        segReadyReject = reject;
+      });
+
+      fetch(toHTTPS(imgInfoPath) + `?cacheBuster=${Date.now()}`, { cache: 'no-cache' })
+        .then(response => response.json())
+        .then(imgInfo => {
+          if (validatePrecomputedInfo(imgInfo)) {
+            const voxelOffset = imgInfo.scales[0].voxel_offset;
+            const size = imgInfo.scales[0].size;
+            data.bounds = [voxelOffset[0], voxelOffset[1], voxelOffset[2], voxelOffset[0] + size[0], voxelOffset[1] + size[1], voxelOffset[2] + size[2]];
+            data.resolution = imgInfo.scales[0].resolution;
+
+            const boundsStr = `${data.bounds[0]}-${data.bounds[3]}_${data.bounds[1]}-${data.bounds[4]}_${data.bounds[2]}-${data.bounds[5]}`;
+            const imgDataUrl = [toHTTPS(imgPath), imgInfo.scales[0].key, boundsStr].join('/');
+
+            downloadImageAsArrayBuffer(imgDataUrl, mimetype = getMIME(imgInfo.scales[0].encoding))
+              .then((arrayBuffer) => {
+                imgDataRGBA = new Uint8Array(arrayBuffer);
+                data.data[0] = new Uint8Array(imgDataRGBA.length / 4);
+                for (let i = 0; i < data.data[0].length; i++) {
+                  data.data[0][i] = imgDataRGBA[i * 4];
+                }
+                imgReadyResolve();
+              });
+
+
+            SIZE.x = size[0]
+            SIZE.y = size[1]
+            SIZE.z = size[2]
+          }
+        });
+
+      fetch(toHTTPS(segInfoPath) + `?cacheBuster=${Date.now()}`, { cache: 'no-cache' })
+        .then(response => response.json())
+        .then(segInfo => {
+          if (validatePrecomputedInfo(segInfo)) {
+            const voxelOffset = segInfo.scales[0].voxel_offset;
+            const size = segInfo.scales[0].size;
+            const boundsStr = `${voxelOffset[0]}-${voxelOffset[0] + size[0]}_${voxelOffset[1]}-${voxelOffset[1] + size[1]}_${voxelOffset[2]}-${voxelOffset[2] + size[2]}`;
+            const segDataUrl = [toHTTPS(segPath), segInfo.scales[0].key, boundsStr].join('/');
+
+            downloadImageAsArrayBuffer(segDataUrl, mimetype = getMIME(segInfo.scales[0].encoding))
+              .then((arrayBuffer) => {
+                segDataRGBA = new Uint8Array(arrayBuffer);
+                data.data[1] = new Uint8Array(segDataRGBA.length / 4);  // Adjust for 16bit
+                for (let i = 0; i < data.data[1].length; i++) {
+                  data.data[1][i] = segDataRGBA[i * 4];
+                }
+                segReadyResolve();
+              });
+          }
+        });
+
       window.channel = elems.channel[0];
       window.channelctx = channel.getContext('2d');
 
-      $.get('/parameters', function (data, status) {
-        SIZE = {
-          x: data.bounds[3] - data.bounds[0],
-          y: data.bounds[4] - data.bounds[1],
-          z: data.bounds[5] - data.bounds[2],
-        };
-
+      Promise.all([imgReady, segReady]).then(function () {
         PARAMETERS = data;
 
         if (data.viewtype === 'single') {
@@ -757,6 +1100,8 @@
         }
 
         loop();
+      }).catch(function (error) {
+        console.error("Img or Segmentation download failed:", error);
       });
 
       elems.paintlabel.on("keyup keypress keydown", function (evt) {
@@ -1247,12 +1592,12 @@
       id="loading"></span>
   </div>
 
-  <div id="show-sidebar" class="hidden">
+  <div id="show-sidebar">
     <hr />
     <hr />
     <hr />
   </div>
-  <div id="right-sidebar" class="hidden">
+  <div id="right-sidebar">
     <div id="instructions">
       <div id="basic-info">
         <span id="cloudpath"></span>
@@ -1300,10 +1645,9 @@
       <p class="segmentation">SAVE SEGMENTATION</p>
 
       <div class="segmentation">
-        <button id="save-numpy" onclick="saveNumpy()"
-          title="Save as a .npy file. Might be big depending on your image size!">.npy</button>
-        <button id="save-crackle" onclick="saveCrackle()"
-          title="Save as a small .ckl file. There will be some processing time. Read more at https://github.com/seung-lab/crackle.">.ckl</button>
+        <button id="gcsUpload" onclick="uploadSegmentationToGCS()"
+          title="Upload a .png file to your Google Cloud Storage bucket." disabled>GCS</button>
+        <progress id="gcsUploadProgress" value="0" max="100" hidden></progress>
       </div>
 
       <p>CONTROLS</p>
