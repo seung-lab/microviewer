@@ -382,7 +382,7 @@ class SegmentationVolume extends MonoVolume {
     let x0 = Math.max(0, Math.trunc(cx - rx) + 0.5),
       xf = Math.min(width, Math.trunc(cx + rx) + 0.5),
       y0 = Math.max(0, Math.trunc(cy - ry) + 0.5),
-      yf = Math.min(width, Math.trunc(cy + ry) + 0.5);
+      yf = Math.min(height, Math.trunc(cy + ry) + 0.5);
 
     const ZERO = _this.getSegmentation().cast(0); 
     let segid = ZERO,
