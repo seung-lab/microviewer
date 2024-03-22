@@ -114,6 +114,7 @@ class ViewerServerHandler(BaseHTTPRequestHandler):
     allowed_files = (
       "/", 
       "/datacube.js", "/crackle.js", "/jquery-3.7.0.min.js", "/favicon.ico",
+      "/microviewer.js", "/microviewer.css",
       "/cursors/exact.png", "/cursors/small.png", "/cursors/medium.png",
       "/cursors/large.png",
       "/cursors/exact-active.png", "/cursors/small-active.png", 
@@ -191,6 +192,8 @@ class ViewerServerHandler(BaseHTTPRequestHandler):
       content_type = "image/png"
     elif ext == ".wasm":
       content_type ="application/octet-stream"
+    elif ext == ".css":
+      content_type ="text/css"
 
     self.send_header('Content-type', content_type)
     self.end_headers()

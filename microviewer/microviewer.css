@@ -1,0 +1,227 @@
+html {
+  overflow: hidden;
+}
+
+body {
+  font-family: monospace;
+  color: white;
+  background: #0d0d0d;
+}
+
+#infobar {
+  margin-bottom: 10px;
+  background: #0d0d0d;
+  position: relative;
+  z-index: 5;
+  width: 400px;
+}
+
+#brush-tools {
+  display: flex;
+  justify-content: left;
+}
+
+#invert-selection {
+  margin-left: 5px;
+}
+
+#brush-size {
+  height: 35px;
+  
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  width: 150px;
+
+  border: 1px solid #4a4a4a;
+  padding: 10px;
+}
+
+#brush-size div {
+  border-radius: 50%;
+  background-color: white;
+  width: 20px;
+  height: 20px;
+  transition: background-color .4s ease;
+  cursor: pointer;
+}
+
+#brush-size div:hover {
+  background-color: #add9c8;
+}
+
+#brush-size div:first-child {
+  width: 10px;
+  height: 10px;
+}
+
+#brush-size div:nth-child(2) {
+  width: 17px;
+  height: 17px;
+}
+
+#brush-size div:nth-child(3) {
+  width: 24px;
+  height: 24px;
+}
+
+#brush-size div:last-child {
+  width: 30px;
+  height: 30px;
+}
+
+#brush-size.exact div:first-child,  
+#brush-size.small div:nth-child(2),
+#brush-size.medium div:nth-child(3),
+#brush-size.large div:nth-child(4)
+{
+  background-color: #80d0b2;
+}
+
+#right-sidebar {
+  position: fixed;
+  top: 0px;
+  right: 0px;
+  z-index: 20;
+
+  background-color: #1a1a1a;
+  height: 100vh;
+  width: 500px;
+  padding-left: 20px;
+
+  transition: right .4s ease;
+
+  border-left: 1px solid #4a4a4a;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+#right-sidebar.hidden {
+  right: -500px;
+}
+
+#show-sidebar {
+  position: fixed;
+  top: 10px;
+  right: 510px;
+
+  background-color: #eee;
+  z-index: 30;
+
+  width: 60px;
+  height: 60px;
+
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+  flex-direction: column;
+  border-radius: 50%;
+
+  cursor: pointer;
+  transition: right .4s ease;
+}
+
+#show-sidebar.hidden {
+  right:15px;
+}
+
+#show-sidebar:hover {
+  background-color: white;
+}
+
+#show-sidebar:active {
+  background-color: #ccc;
+}
+
+#show-sidebar hr {
+  width: 25px;
+  height: 1px;
+  background-color: black;
+  border-color: black;
+}
+
+#show-sidebar hr:first-child {
+  position: relative;
+  top: 6px;
+}
+
+#show-sidebar hr:last-child {
+  position: relative;
+  bottom: 6px;
+}
+
+#basic-info {
+  margin-top: 10px;
+}
+
+#instructions {
+  position: relative;
+  z-index: 0;
+
+  width: 450px;
+}
+
+img {
+  margin: 1px;
+}
+
+#addsegs {
+  width: 420px;
+  height: 10ex;
+
+  margin-top: 15px;
+}
+
+#selected_segments {
+  max-height: 200px;
+  overflow-y: scroll;
+  background-color: #4a4a4a;
+  padding: 1em;
+  width: 400px;
+}
+
+canvas {
+  position: relative;
+  border: 1px dotted white;
+  max-width: calc(100vw - 20px);
+  max-height: calc(100vh - 100px);
+  background: #0d0d0d;
+
+  image-rendering: crisp-edges;
+  image-rendering: pixelated; /* chrome  */
+  transition: transform .4s ease,bottom .4s ease,left .4s ease;
+  cursor: crosshair;
+}
+
+canvas.paintable.exact {
+  cursor: url("./cursors/exact.png") 20 20.5, crosshair;
+}
+
+canvas.paintable.exact:active {
+  cursor: url("./cursors/exact-active.png") 20 20.5, crosshair; /* F7EDCE, color of active state */
+}
+
+canvas.paintable.small {
+  cursor: url("./cursors/small.png") 16 16, crosshair
+}
+
+canvas.paintable.small:active {
+  cursor: url("./cursors/small-active.png") 16 16, crosshair
+}
+
+canvas.paintable.medium {
+  cursor: url("./cursors/medium.png") 28.5 28.5, crosshair
+}
+
+canvas.paintable.medium:active {
+  cursor: url("./cursors/medium-active.png") 28.5 28.5, crosshair
+}
+
+canvas.paintable.large {
+  cursor: url("./cursors/large.png") 52 52, crosshair
+}
+
+canvas.paintable.large:active {
+  cursor: url("./cursors/large-active.png") 52 52, crosshair
+}
