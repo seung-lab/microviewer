@@ -391,39 +391,8 @@ function toggleMenu () {
   elems.showsidebar.toggleClass("hidden");
 }
 
-$(document).ready(function () {
-  elems = {
-    cloudpath: $('#cloudpath'),
-    bounds: $('#bounds'),
-    dtype: $('#dtype'),
-    resolution: $('#resolution'),
-    shape: $('#shape'),
-    axis: $('#axis'),
-    coord: $('#coord'),
-    realcoord: $('#realcoord'),
-    clickcoord: $('#clickcoord'),
-    clickrealcoord: $('#clickrealcoord'),
-    loading: $('#loading'),
-    pxvalue: $('#pxvalue'),
-    clickpxvalue: $('#clickpxvalue'),
-    channel: $('#channel'),
-    selected_segments: $('#selected_segments'),
-    addsegs: $('#addsegs'),
-    show_hover: $('#show_hover'),
-    show_unselected: $('#show_unselected'),
-    magnification: $('#magnification'),
-    showsidebar: $('#show-sidebar'),
-    rtsidebar: $('#right-sidebar'),
-    copysegs: $("#copy-segs"),
-    brushsize: $("#brush-size"),
-    paintmode: $("#paint_voxels"),
-    paintlabel: $("#paintlabel"),
-    memoryusage: $("#memory-usage"),
-  };
-  
-  window.channel = elems.channel[0];
-  window.channelctx = channel.getContext('2d');
 
+function loadVolumeFromMicroServer() {
   $.get('/parameters', function (data, status) {
     SIZE = {
       x: data.bounds[3] - data.bounds[0],
@@ -511,6 +480,42 @@ $(document).ready(function () {
 
     loop();
   });
+}
+
+$(document).ready(function () {
+  elems = {
+    cloudpath: $('#cloudpath'),
+    bounds: $('#bounds'),
+    dtype: $('#dtype'),
+    resolution: $('#resolution'),
+    shape: $('#shape'),
+    axis: $('#axis'),
+    coord: $('#coord'),
+    realcoord: $('#realcoord'),
+    clickcoord: $('#clickcoord'),
+    clickrealcoord: $('#clickrealcoord'),
+    loading: $('#loading'),
+    pxvalue: $('#pxvalue'),
+    clickpxvalue: $('#clickpxvalue'),
+    channel: $('#channel'),
+    selected_segments: $('#selected_segments'),
+    addsegs: $('#addsegs'),
+    show_hover: $('#show_hover'),
+    show_unselected: $('#show_unselected'),
+    magnification: $('#magnification'),
+    showsidebar: $('#show-sidebar'),
+    rtsidebar: $('#right-sidebar'),
+    copysegs: $("#copy-segs"),
+    brushsize: $("#brush-size"),
+    paintmode: $("#paint_voxels"),
+    paintlabel: $("#paintlabel"),
+    memoryusage: $("#memory-usage"),
+  };
+  
+  window.channel = elems.channel[0];
+  window.channelctx = channel.getContext('2d');
+
+  loadVolumeFromMicroServer();
 
   elems.paintlabel.on("keyup keypress keydown", function (evt) {
     evt.stopPropagation();
