@@ -6,6 +6,8 @@ import webbrowser
 
 import numpy as np
 
+from .viz3d import objects
+
 DEFAULT_PORT = 8080
 
 def to3d(img):
