@@ -120,9 +120,10 @@ def objects(
 
   segids.sort()
 
-  for bbx in bboxes:
+  for i, bbx in enumerate(bboxes):
+    color = BBOX_COLORS[i % len(BBOX_COLORS)]
     actors.append(
-      create_vtk_bbox(bbx)
+      create_vtk_bbox(bbx, color)
     )
 
   display_actors(segids, actors)
@@ -235,7 +236,7 @@ def create_vtk_mesh(mesh, opacity=1.0):
 
   return actor
 
-def create_vtk_bbox(bbox):
+def create_vtk_bbox(bbox, color=None):
   import vtk
   vtk_points = vtk.vtkPoints()
   
@@ -279,9 +280,12 @@ def create_vtk_bbox(bbox):
   mapper = vtk.vtkPolyDataMapper()
   mapper.SetInputData(poly_data)
 
+  if color is None:
+    color = BBOX_COLORS[0]
+
   actor = vtk.vtkActor()
   actor.SetMapper(mapper)
-  actor.GetProperty().SetColor(*BBOX_COLORS[0])
+  actor.GetProperty().SetColor(*color)
   actor.GetProperty().SetLineWidth(2)
 
   return actor
