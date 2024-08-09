@@ -4,6 +4,12 @@ from collections import defaultdict
 
 import numpy as np
 
+def hex2color(color):
+  b = (color & 0xff) / 255.0
+  g = ((color >> 8) & 0xff) / 255.0
+  r = ((color >> 16) & 0xff) / 255.0
+  return (r,g,b)
+
 # created with help of https://coolors.co/001021-ffa400-009ffd-eaf6ff-9e7b9b
 COLORS = [
   (1.0, 0.6431372549019608, 0.0), # alice blue (white)
@@ -16,6 +22,15 @@ COLORS = [
   (0.8980392156862745, 0.3254901960784314, 0.5058823529411764), # blush
   (0.7647058823529411, 0.7647058823529411, 0.9019607843137255),# periwinkle
 ]
+
+BBOX_COLORS = [
+  0xE9D758, # yellow
+  0x06D6A0, # emerald
+  0x00ABE7, # picton blue
+  0xF58549, # orange (crayola)
+  0xEDC9FF, # mauve
+]
+BBOX_COLORS = [ hex2color(c) for c in BBOX_COLORS ]
 
 def toiter(obj, is_iter=False):
   if isinstance(obj, str) or isinstance(obj, dict):
@@ -40,6 +55,9 @@ def is_mesh(obj):
 def is_skeleton(obj):
   return hasattr(obj, "vertices") and hasattr(obj, "edges")
 
+def is_bbox(obj):
+  return hasattr(obj, "minpt") and hasattr(obj, "maxpt")
+
 # vtk code written with help of ChatGPT
 def objects(
   objects:Sequence[Any],
@@ -50,6 +68,12 @@ def objects(
   objects = toiter(objects)
 
   pairs = defaultdict(list)
+
+  bboxes = [
+    obj 
+    for obj in objects 
+    if is_bbox(obj)
+  ]
 
   for obj in objects:
     if hasattr(obj, "id"):
@@ -95,6 +119,11 @@ def objects(
         )
 
   segids.sort()
+
+  for bbx in bboxes:
+    actors.append(
+      create_vtk_bbox(bbx)
+    )
 
   display_actors(segids, actors)
 
@@ -206,7 +235,53 @@ def create_vtk_mesh(mesh, opacity=1.0):
 
   return actor
 
+def create_vtk_bbox(bbox):
+  import vtk
+  vtk_points = vtk.vtkPoints()
+  
+  minpt = bbox.minpt.clone()
+  maxpt = bbox.maxpt.clone()
 
+  corners = [
+    minpt,
+    [ maxpt[0], minpt[1], minpt[2] ],
+    [ minpt[0], maxpt[1], minpt[2] ],
+    [ minpt[0], minpt[1], maxpt[2] ],
+    [ maxpt[0], maxpt[1], minpt[2] ],
+    [ maxpt[0], minpt[1], maxpt[2] ],
+    [ minpt[0], maxpt[1], maxpt[2] ],
+    maxpt,
+  ]
 
+  for pt in corners:
+    vtk_points.InsertNextPoint(np.asarray(pt))
 
+  edges = [
+    [0,1], [0,2], [0,3],
+    [7,6], [7,5], [7,4],
+    [6,2], [6,3],
+    [3,5], [5,1],
+    [2,4], [4,1],
+  ]
 
+  lines = vtk.vtkCellArray()
+
+  for edge in edges:
+    line = vtk.vtkLine()
+    line.GetPointIds().SetId(0, edge[0])
+    line.GetPointIds().SetId(1, edge[1])
+    lines.InsertNextCell(line)
+
+  poly_data = vtk.vtkPolyData()
+  poly_data.SetPoints(vtk_points)
+  poly_data.SetLines(lines)
+
+  mapper = vtk.vtkPolyDataMapper()
+  mapper.SetInputData(poly_data)
+
+  actor = vtk.vtkActor()
+  actor.SetMapper(mapper)
+  actor.GetProperty().SetColor(*BBOX_COLORS[0])
+  actor.GetProperty().SetLineWidth(2)
+
+  return actor
