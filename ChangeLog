@@ -1,6 +1,47 @@
 CHANGES
 =======
 
+1.8.0
+-----
+
+* feat: add mesh and skeleton viewer via vtk extra
+* fix: make the infobar a bit longer
+
+1.7.1
+-----
+
+* perf: faster libcrackle.wasm
+
+1.7.0
+-----
+
+* perf: faster libcrackle encoding performance
+* refactor: move parameters request into function
+* refactor: move css and js into external files
+* fix: display info bar even when zoomed in
+
+1.6.6
+-----
+
+* fix: ensure libcrackle.wasm is loaded on page load
+
+1.6.5
+-----
+
+* fix: misspelling of "UNDO"
+* chore: update libcrackle.wasm
+
+1.6.4
+-----
+
+* fix: wrong dimension used in getSegsInCircle
+* fix: refine cursor offset (large)
+* feat: add destructivelyMergeSelection and destructivelyEraseSelection
+* docs: show two more commands
+* fix: don't hide segmentation during ctrl-shift-z
+* feat: add left shift hide segmentation right shift hide channel
+* feat: shift to hide segmentation in hyperview
+
 1.6.3
 -----
 
