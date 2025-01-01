@@ -58,6 +58,9 @@ def is_skeleton(obj):
 def is_bbox(obj):
   return hasattr(obj, "minpt") and hasattr(obj, "maxpt")
 
+def is_point_cloud(obj):
+  return isinstance(obj, np.ndarray) and obj.ndim == 2
+
 # vtk code written with help of ChatGPT
 def objects(
   objects:Sequence[Any],
@@ -94,6 +97,10 @@ def objects(
     elif is_skeleton(obj):
       actors.extend(
         create_vtk_skeleton(obj)
+      )
+    elif is_point_cloud(obj):
+      actors.append(
+        create_vtk_point_cloud(obj)
       )
 
   pairs.pop(None)
@@ -289,3 +296,36 @@ def create_vtk_bbox(bbox, color=None):
   actor.GetProperty().SetLineWidth(2)
 
   return actor
+
+def create_vtk_point_cloud(ptc):
+  import vtk
+  from vtk.util.numpy_support import numpy_to_vtk
+
+  colors = vtk.vtkNamedColors()
+  bkg = map(lambda x: x / 255.0, [40, 40, 40, 255])
+  colors.SetColor("BkgColor", *bkg)
+
+  points = vtk.vtkPoints()
+  vtk_points = numpy_to_vtk(ptc, deep=True)
+  points.SetData(vtk_points)
+
+  verts = vtk.vtkCellArray()
+  n_points = ptc.shape[0]
+  connectivity = np.vstack((np.ones(n_points, dtype=np.int64), np.arange(n_points, dtype=np.int64))).T.flatten()
+  verts.SetCells(n_points, numpy_to_vtk(connectivity, deep=True, array_type=vtk.VTK_ID_TYPE))
+
+  polydata = vtk.vtkPolyData()
+  polydata.SetPoints(points)
+  polydata.SetVerts(verts)
+
+  mapper = vtk.vtkPolyDataMapper()
+  mapper.SetInputData(polydata)
+
+  cylinderActor = vtk.vtkActor()
+  cylinderActor.SetMapper(mapper)
+  cylinderActor.GetProperty().SetColor(colors.GetColor3d("Mint"))
+  cylinderActor.RotateX(30.0)
+  cylinderActor.RotateY(-45.0)
+
+  return cylinderActor
+
