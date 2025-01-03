@@ -4,13 +4,17 @@
 Multiplatform 3D numpy image browser based viewer.
 
 ```python
-from microviewer import view, hyperview
+from microviewer import view, hyperview, objects
 
 view(numpy_image) # for gray and color images
 view(numpy_image, seg=True) # for segmentation labels
 view(numpy_image, seg=True, port=8082)
 
 hyperview(image, labels) # interactive overlay
+
+# uses vtk to visualize meshes, bounding boxes, 
+# skeletons, and point clouds
+objects([ mesh, skeleton, bbox, point_cloud ])
 ```
 
 ```bash
