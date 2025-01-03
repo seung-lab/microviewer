@@ -33,7 +33,7 @@ BBOX_COLORS = [
 BBOX_COLORS = [ hex2color(c) for c in BBOX_COLORS ]
 
 def toiter(obj, is_iter=False):
-  if isinstance(obj, str) or isinstance(obj, dict):
+  if isinstance(obj, (str, dict, np.ndarray)):
     if is_iter:
       return [ obj ], False
     return [ obj ]
