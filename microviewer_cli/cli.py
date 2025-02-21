@@ -119,6 +119,9 @@ def main(
   """
   View 3D images in the browser.
   """
+  if '.ckl' in image and not segmentation:
+    seg = True
+
   try:
     image_np = load(image, shape, dtype, order)
     if segmentation:
