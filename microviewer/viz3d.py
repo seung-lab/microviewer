@@ -324,8 +324,6 @@ def create_vtk_point_cloud(ptc):
   cylinderActor = vtk.vtkActor()
   cylinderActor.SetMapper(mapper)
   cylinderActor.GetProperty().SetColor(colors.GetColor3d("Mint"))
-  cylinderActor.RotateX(30.0)
-  cylinderActor.RotateY(-45.0)
 
   return cylinderActor
 
