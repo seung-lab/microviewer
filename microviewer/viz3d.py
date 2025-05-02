@@ -115,13 +115,14 @@ def objects(
       raise ValueError(f"Unable to determine object display type: {obj}")
 
   lut = None
-  if skeleton_color_by == "r":
-    min_radius = np.inf
-    max_radius = -np.inf
+  if skeleton_color_by in ('r', 'x'):
+    min_val = np.inf
+    max_val = -np.inf
+    prop = "radii" if skeleton_color_by == 'r' else 'cross_sectional_area'
     for skel in skels:
-      min_radius = min(skel.radii.min(), min_radius)
-      max_radius = max(skel.radii.max(), max_radius)
-    lut = create_radii_color_map(min_radius, max_radius)
+      min_val = min(getattr(skel, prop).min(), min_val)
+      max_val = max(getattr(skel, prop).max(), max_val)
+    lut = create_color_map(min_val, max_val)
 
   actors = []
 
@@ -171,10 +172,10 @@ def objects(
       create_vtk_bbox(bbx, color)
     )
 
-  if skeleton_color_by == 'r' and len(skels) > 0:
+  if skeleton_color_by in ('r', 'x') and len(skels) > 0:
     scalar_bar = vtk.vtkScalarBarActor()
     scalar_bar.SetLookupTable(lut)
-    scalar_bar.SetTitle("Radius")
+    scalar_bar.SetTitle("Radius" if skeleton_color_by == 'r' else 'Cross Sectional Area')
     scalar_bar.SetWidth(0.1)
     scalar_bar.SetHeight(0.3)
 
@@ -255,7 +256,15 @@ def create_vtk_skeleton(skel, color_by, lut):
       mapper.SetScalarModeToUsePointData()
       mapper.SetLookupTable(lut)
       mapper.UseLookupTableScalarRangeOn()
-    
+    elif color_by == 'x' and skel.cross_sectional_area is not None:
+      xsa = vtk.util.numpy_support.numpy_to_vtk(skel.cross_sectional_area)
+      xsa.SetName("Cross Sectional Area")
+      polyline.GetPointData().SetScalars(xsa)
+      mapper.SetScalarVisibility(1)
+      mapper.SetScalarModeToUsePointData()
+      mapper.SetLookupTable(lut)
+      mapper.UseLookupTableScalarRangeOn()
+
     actor = vtk.vtkActor()
     actor.SetMapper(mapper)
     actor.GetProperty().SetLineWidth(2)
@@ -384,13 +393,13 @@ def create_vtk_point_cloud(ptc):
 
   return cylinderActor
 
-def create_radii_color_map(min_radius, max_radius):
+def create_color_map(min_val, max_val):
   import vtk
   import vtk.util.numpy_support
 
   lut = vtk.vtkLookupTable()
   lut.SetScaleToLinear()
-  lut.SetRange(min_radius, max_radius)
+  lut.SetRange(min_val, max_val)
   
   lut.SetNumberOfColors(256)
   cmap = fast_256_color_map()
