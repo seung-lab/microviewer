@@ -1,6 +1,30 @@
 CHANGES
 =======
 
+1.13.0
+------
+
+* feat(skeleton): visualize cross sectional area
+* feat: add coloring skeletons by radius
+
+1.12.0
+------
+
+* feat: add jxl image visualization support
+
+1.11.0
+------
+
+* fix: remove cyl skew for point clouds, causes mismatch in position
+* feat: automatically interpret .ckl files as segmentation
+
+1.10.0
+------
+
+* docs: show how to use objects
+* fix: np.ndarray considered not an iterator for these purposes
+* feat: point cloud viewer
+
 1.9.0
 -----
 
