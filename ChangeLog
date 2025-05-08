@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+1.13.1
+------
+
+* chore: update metadata
+* fix(3d): close window when you click the 'x'
+
 1.13.0
 ------
 
