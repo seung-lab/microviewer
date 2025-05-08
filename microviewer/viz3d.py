@@ -216,6 +216,8 @@ def display_actors(segids, actors):
   
   render_window.SetWindowName(window_name)
   
+  interactor.AddObserver("ExitEvent", lambda o, e, : interactor.TerminateApp())
+
   render_window.Render()
   interactor.Start()
 
