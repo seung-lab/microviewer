@@ -1429,7 +1429,7 @@ class Uint16DataCube extends DataCube {
       ? this.canvas_context.createImageData(sizes[0], sizes[1])
       : this.cached_imgdata.getImageData(sizes[0], sizes[1]);
 
-    if (this.minval == 0 && this.maxval === 65535) {
+    if (this.minval === 0 && this.maxval === 65535) {
       return imgdata;
     }
 
