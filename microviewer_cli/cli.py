@@ -97,6 +97,9 @@ def load(filename, shape, dtype, order):
     import nibabel as nib
     image = nib.load(filename)
     image = np.array(image.dataobj)
+  elif ext == ".jxl":
+    import imagecodecs
+    image = imagecodecs.jpegxl_decode(binary.read(), numthreads=0)
   else:
     raise ValueError("Data type not supported: " + ext)
 
@@ -119,6 +122,9 @@ def main(
   """
   View 3D images in the browser.
   """
+  if '.ckl' in image and not segmentation:
+    seg = True
+
   try:
     image_np = load(image, shape, dtype, order)
     if segmentation:

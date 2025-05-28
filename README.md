@@ -37,7 +37,7 @@ Visualize 3D numpy arrays in your browser without difficult installation procedu
 - Save segmentation as [.npy](https://numpy.org/neps/nep-0001-npy-format.html) or [.ckl](https://github.com/seung-lab/crackle), an advanced compresssion format.
 - Undo/Redo
 
-## Supports
+## 3D Image Support
 
 - 8-bit grayscale 3D images
 - color images (including 3 channel 3D images)
@@ -47,6 +47,47 @@ Visualize 3D numpy arrays in your browser without difficult installation procedu
 - .npy, .ckl, or .nii format
 
 For .ckl and .nii formats, you must separately install crackle-codec and nibabel respectively.
+
+## 3D Object Support
+
+- [osteoid](https://github.com/seung-lab/osteoid) Skeletons
+	- Color By: Connected Component, Radius, Cross Sectional Area
+- [zmesh](https://github.com/seung-lab/zmesh) and [CloudVolume](https://github.com/seung-lab/cloud-volume) Meshes
+- Point Clouds
+- Bounding Boxes
+
+### Example
+
+```python
+import numpy as np
+import zmesh
+import kimimaro
+import crackle
+import microviewer
+from osteoid.lib import Bbox
+
+labels = crackle.load("connectomics.npy.ckl.gz", label=62347522)
+resolution = np.array([16,16,40])
+
+skel = kimimaro.skeletonize(
+  labels, 
+  teasar_params={
+    'scale': 3,
+    'pdrf_exponent': 8,
+  },
+  anisotropy=resolution,
+)[1]
+
+mesher = zmesh.Mesher(resolution)
+mesher.mesh(labels)
+mesh = mesher.get(1)
+
+bbox = Bbox([0,0,0], np.array(labels.shape) * resolution)
+
+microviewer.objects([ bbox, mesh, skel ], skeleton_color_by='radius')
+```
+
+![3D object display in microviewer via vtk](radius-visualization.jpg "3D object display in microviewer via vtk.")
 
 ## Installation
 
