@@ -106,7 +106,7 @@ class MonoVolume {
   }
 
   render (ctx, axis, slice) {
-    if (this.channel.bytes === 1) {
+    if (this.channel.bytes <= 2) {
       return this.renderChannelSlice(ctx, axis, slice);
     }
 
@@ -1368,6 +1368,99 @@ class DataCube {
     }
 
     return ArrayType;
+  }
+}
+
+class Uint16DataCube extends DataCube {
+  constructor (args) {
+    super(args);
+    this.minval = 65535;
+    this.maxval = 0;
+    this.normalized = false;
+  }
+
+  renormalize () {
+    let _this = this;
+    let minval = 65535;
+    let maxval = 0;
+
+    const cube = _this.cube;
+    
+    for (let i = cube.length - 1; i >= 0; i--) {
+      if (cube[i] > maxval) {
+        maxval = cube[i];
+      }
+      if (cube[i] < minval) {
+        minval = cube[i];
+      }
+    }
+
+    this.minval = minval;
+    this.maxval = maxval;
+    this.normalized = true;
+  }
+
+  /* grayImageSlice
+   *
+   * Generate an ImageData object that encodes a grayscale 
+   * representation of an on-axis 2D slice of the data cube.
+   *
+   * Required:
+   *   [0] axis: 'x', 'y', or 'z'
+   *   [1] index: 0 - axis size - 1
+   * Optional:
+   *   [2] transparency - black pixels are transparent
+   *   [3] copy - whether to allocate new memory (true) or reuse a shared cache for this function (false)
+   *
+   * Return: imagedata
+   */
+  grayImageSlice (axis, index, transparency=false, copy=true) {
+    let _this = this;
+
+    if (!this.normalized) {
+      this.renormalize();
+    }
+
+    let square = this.slice(axis, index, /*copy=*/false);
+
+    let sizes = this.faceDimensions(axis);
+
+    let imgdata = copy
+      ? this.canvas_context.createImageData(sizes[0], sizes[1])
+      : this.cached_imgdata.getImageData(sizes[0], sizes[1]);
+
+    if (this.minval == 0 && this.maxval === 65535) {
+      return imgdata;
+    }
+
+    let data32 = new Uint32Array(imgdata.data.buffer);
+
+    const alpha = this.isLittleEndian() 
+      ? 0xff000000
+      : 0x000000ff;
+
+    let i = 0;
+    let val = 0|0;
+    const black = transparency ? 0x00000000 : alpha;
+
+    if (this.minval === this.maxval) {
+      val = (this.minval === 0) ? black : 0xffffffff;
+
+      for (i = square.length - 1; i >= 0; i--) {
+          data32[i] = val;
+      } 
+      return imgdata;
+    }
+
+    const norm = 65535.0 / (this.maxval - this.minval);
+    const minval = (this.minval * norm)|0;
+
+    for (i = square.length - 1; i >= 0; i--) {
+      val = (square[i] * norm - minval) >> 8;
+      data32[i] = (val | val << 8 | val << 16 | alpha);
+    }
+
+    return imgdata;
   }
 }
 

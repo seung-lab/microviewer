@@ -189,6 +189,12 @@ function create_datacube(dtype, num_bytes, size) {
       size: size,
     });
   }
+  else if (dtype == 'uint16') {
+    return new Uint16DataCube({
+      bytes: num_bytes,
+      size: size,
+    });
+  }
 
   return new DataCube({
     bytes: num_bytes,
