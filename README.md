@@ -92,7 +92,7 @@ microviewer.objects([ bbox, mesh, skel ], skeleton_color_by='radius')
 ## Installation
 
 ```bash
-pip install "microviewer"
+pip install microviewer
 ```
 
 By default, only .npy files are supported. Additional formats are supported via optional downloads.
@@ -106,7 +106,7 @@ Possible optional arguments:
 Note: jxl and objects have relatively heavy downloads.
 
 ```bash
-pip install microviewer[all]
+pip install "microviewer[all]"
 ```
 
 ## History
