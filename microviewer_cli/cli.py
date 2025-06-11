@@ -93,6 +93,13 @@ def load(filename, shape, dtype, order):
     image = crackle.decompress(binary.read())
   elif ext == ".npy":
     image = load_numpy(filename, shape, dtype, order)
+  elif ext == ".nrrd":
+    import nrrd
+    image, header = nrrd.read(filename)
+    if image.shape[0] == 3 and image.ndim == 3:
+      image = image[...,np.newaxis]
+      image = np.transpose(image, axes=[1,2,3,0])
+    return image
   elif ext == ".nii":
     import nibabel as nib
     image = nib.load(filename)

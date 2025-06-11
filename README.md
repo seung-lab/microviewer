@@ -44,9 +44,9 @@ Visualize 3D numpy arrays in your browser without difficult installation procedu
 - floating point images
 - boolean images
 - segmentation labels
-- .npy, .ckl, or .nii format
+- .npy, .ckl, .nrrd, or .nii format
 
-For .ckl and .nii formats, you must separately install crackle-codec and nibabel respectively.
+For .ckl, .nrrd, and .nii formats, you must install crackle-codec, pynrrd, and nibabel respectively. All are installed by the "all_formats" optional installation argument.
 
 ## 3D Object Support
 
@@ -92,10 +92,22 @@ microviewer.objects([ bbox, mesh, skel ], skeleton_color_by='radius')
 ## Installation
 
 ```bash
-pip install "microviewer[all_formats]"
+pip install "microviewer"
 ```
 
-all_formats will install all supported formats for the CLI. By default, only .npy filesare supported.
+By default, only .npy files are supported. Additional formats are supported via optional downloads.
+
+Possible optional arguments: 
+
+`all_formats`, `nii`, `nrrd`, `ckl`, `jxl`,  
+`objects`,  
+`all`  
+
+Note: jxl and objects have relatively heavy downloads.
+
+```bash
+pip install microviewer[all]
+```
 
 ## History
 
