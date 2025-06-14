@@ -183,6 +183,24 @@ def objects(
 
   display_actors(segids, actors)
 
+
+def recenter_camera_on_click(picker, interactor, renderer):
+        
+    def recenter(_obj, _evt):
+        x, y = interactor.GetEventPosition()
+        if picker.Pick(x, y, 0, renderer):      
+            fp_new = np.array(picker.GetPickPosition())
+
+            cam = renderer.GetActiveCamera()
+            offset = np.array(cam.GetPosition()) - np.array(cam.GetFocalPoint())
+
+            cam.SetFocalPoint(*fp_new)          
+            cam.SetPosition(*(fp_new + offset)) 
+            renderer.ResetCameraClippingRange() 
+            interactor.Render()
+
+    interactor.AddObserver("RightButtonPressEvent", recenter)
+
 def display_actors(segids, actors):
   if len(actors) == 0:
     return
@@ -209,6 +227,9 @@ def display_actors(segids, actors):
   for actor in actors:
     renderer.AddActor(actor)
 
+  picker = vtk.vtkCellPicker()
+  recenter_camera_on_click(picker, interactor, renderer)
+  
   window_name = f"Mesh & Skeleton Viewer"
   if segids:
     segids = [ str(x) for x in segids ]
