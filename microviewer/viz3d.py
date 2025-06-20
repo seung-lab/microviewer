@@ -1,8 +1,9 @@
-from typing import Sequence, Union, Any
-
-from collections import defaultdict
+from collections import abc, defaultdict
+from itertools import cycle
+from typing import Any, Sequence
 
 import numpy as np
+
 
 def hex2color(color):
   b = (color & 0xff) / 255.0
@@ -69,6 +70,7 @@ def is_point_cloud(obj):
 def objects(
   objects:Sequence[Any],
   skeleton_color_by='r',
+  mesh_color: str | Sequence = 'same', # 'same' or 'diff' or a list of colors
 ):
   """
   Produce a 3D co-visualization of meshes and skeletons together.
@@ -145,6 +147,22 @@ def objects(
 
   segids = []
 
+  # handle mesh colors
+  if isinstance(mesh_color, str):                 
+      if mesh_color == 'same':
+          mesh_palette = cycle([(1., 1., 1.)])   
+      elif mesh_color == 'diff':
+          mesh_palette = cycle(COLORS + BBOX_COLORS)
+      else:
+          raise ValueError("mesh_color must be 'same' or 'diff' when str")
+  elif isinstance(mesh_color, abc.Iterable):
+      palette = list(mesh_color)           
+      if not palette:
+          raise ValueError("mesh_color iterable is empty")
+      mesh_palette = cycle([tuple(map(float, c)) for c in palette])
+  else:
+      raise TypeError("mesh_color must be a str or an iterable of RGB triples")
+
   for i, (label, objs) in enumerate(pairs.items()):
     segids.append(label)
     mesh_opacity = 1.0
@@ -156,7 +174,10 @@ def objects(
     for obj in objs:
       if is_mesh(obj):
         actors.append(
-          create_vtk_mesh(obj, opacity=mesh_opacity)
+          create_vtk_mesh(obj, 
+                          opacity=mesh_opacity, 
+                          color= next(mesh_palette),
+                          )
         )
       elif is_skeleton(obj):
         skels.append(obj)
@@ -299,7 +320,7 @@ def create_vtk_skeleton(skel, color_by, lut):
 
   return actors
 
-def create_vtk_mesh(mesh, opacity=1.0):
+def create_vtk_mesh(mesh, opacity=1.0, color=(1.0, 1.0, 1.0)):
   import vtk
   from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
 
@@ -329,7 +350,7 @@ def create_vtk_mesh(mesh, opacity=1.0):
   actor.SetMapper(mapper)
 
   actor.GetProperty().SetOpacity(opacity)
-
+  actor.GetProperty().SetColor(*color)
   return actor
 
 def create_vtk_bbox(bbox, color=None):
