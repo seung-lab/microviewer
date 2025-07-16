@@ -1,6 +1,6 @@
 from collections import abc, defaultdict
 from itertools import cycle
-from typing import Any, Sequence
+from typing import Any, Sequence, Union
 
 import numpy as np
 
@@ -70,7 +70,7 @@ def is_point_cloud(obj):
 def objects(
   objects:Sequence[Any],
   skeleton_color_by='r',
-  mesh_color: str | Sequence = 'same', # 'same' or 'diff' or a list of colors
+  mesh_color: Union[str, Sequence] = 'same', # 'same' or 'diff' or a list of colors
 ):
   """
   Produce a 3D co-visualization of meshes and skeletons together.
