@@ -208,6 +208,12 @@ def objects(
 def recenter_camera_on_click(picker, interactor, renderer):
         
     def recenter(_obj, _evt):
+        if not (
+          _evt == "RightButtonPressEvent" 
+          or (_evt == "LeftButtonPressEvent" and interactor.GetControlKey())
+        ):
+          return
+
         x, y = interactor.GetEventPosition()
         if picker.Pick(x, y, 0, renderer):      
             fp_new = np.array(picker.GetPickPosition())
@@ -221,6 +227,7 @@ def recenter_camera_on_click(picker, interactor, renderer):
             interactor.Render()
 
     interactor.AddObserver("RightButtonPressEvent", recenter)
+    interactor.AddObserver("LeftButtonPressEvent", recenter)
 
 def display_actors(segids, actors):
   if len(actors) == 0:
