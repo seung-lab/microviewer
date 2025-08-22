@@ -1,6 +1,39 @@
 CHANGES
 =======
 
+1.17.1
+------
+
+* fix: use Union type for py39
+
+1.17.0
+------
+
+* Colorful meshes in \`viz3d.py\` (#13)
+
+1.16.0
+------
+
+* add: \`recenter\_camera\_on\_click()\` to \`viz3d.py\` (#12)
+
+1.15.1
+------
+
+* install: replicate extras in setup.cfg
+
+1.15.0
+------
+
+* docs: fix quotes
+* feat: add support for nrrd and document optional installations
+* fix: use strict equality
+
+1.14.0
+------
+
+* feat: support uint16 grayscale images
+* docs: show 3d visualization
+
 1.13.1
 ------
 
