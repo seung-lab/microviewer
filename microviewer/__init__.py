@@ -35,6 +35,10 @@ def hyperview(
   port=DEFAULT_PORT,
   browser=True,
 ):
+  if img.__class__.__name__ == "CrackleArray":
+    img = img.decompress()
+  if seg.__class__.__name__ == "CrackleArray":
+    seg = seg.decompress()
 
   img = to3d(img)
   seg = to3d(seg)
@@ -74,6 +78,9 @@ def view(
   port=DEFAULT_PORT,
   browser=True,
 ):
+  if img.__class__.__name__ == "CrackleArray":
+    img = img.decompress()
+
   img = to3d(img)
 
   data = {
