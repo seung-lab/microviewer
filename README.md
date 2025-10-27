@@ -85,6 +85,17 @@ mesh = mesher.get(1)
 bbox = Bbox([0,0,0], np.array(labels.shape) * resolution)
 
 microviewer.objects([ bbox, mesh, skel ], skeleton_color_by='radius')
+
+
+# x = cross sectional area (if precomputed)
+# r = radius (if precomputed, but usually is)
+# c = connected components
+microviewer.objects([ bbox, mesh, skel ], skeleton_color_by='x', skeleton_heatmap={
+  "min": 100, # automatically determined if unspecified
+  "max": 100000, # automatically determined if unspecified
+  "scale": "log", # linear (default) or log
+})
+
 ```
 
 ![3D object display in microviewer via vtk](radius-visualization.jpg "3D object display in microviewer via vtk.")
