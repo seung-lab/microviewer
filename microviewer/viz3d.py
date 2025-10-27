@@ -1,3 +1,5 @@
+from typing import Any
+
 from collections import abc, defaultdict
 from itertools import cycle
 from typing import Any, Sequence, Union
@@ -66,10 +68,17 @@ def is_bbox(obj):
 def is_point_cloud(obj):
   return isinstance(obj, np.ndarray) and obj.ndim == 2
 
+SKELETON_HEATMAP_OPTIONS = {
+  'min': None,
+  'max': None,
+  'scale': 'linear',
+}
+
 # vtk code written with help of ChatGPT and DeepSeek
 def objects(
   objects:Sequence[Any],
-  skeleton_color_by='r',
+  skeleton_color_by:str = 'r',
+  skeleton_heatmap:dict[str,Any] = SKELETON_HEATMAP_OPTIONS,
   mesh_color: Union[str, Sequence] = 'same', # 'same' or 'diff' or a list of colors
 ):
   """
@@ -117,14 +126,25 @@ def objects(
       raise ValueError(f"Unable to determine object display type: {obj}")
 
   lut = None
+  orig_min_val = skeleton_heatmap.get("min", None)
+  orig_max_val = skeleton_heatmap.get("max", None)
+
   if skeleton_color_by in ('r', 'x'):
-    min_val = np.inf
-    max_val = -np.inf
+    min_val = orig_min_val or np.inf
+    max_val = orig_max_val or -np.inf
     prop = "radii" if skeleton_color_by == 'r' else 'cross_sectional_area'
-    for skel in skels:
-      min_val = min(getattr(skel, prop).min(), min_val)
-      max_val = max(getattr(skel, prop).max(), max_val)
-    lut = create_color_map(min_val, max_val)
+
+    if orig_max_val is None or orig_min_val is None:
+      for skel in skels:
+        if orig_min_val is None:
+          min_val = min(getattr(skel, prop).min(), min_val)
+        if orig_max_val is None:
+          max_val = max(getattr(skel, prop).max(), max_val)
+
+    lut = create_color_map(
+      min_val, max_val, 
+      scale=skeleton_heatmap.get("scale", "linear"),
+    )
 
   actors = []
 
@@ -444,12 +464,25 @@ def create_vtk_point_cloud(ptc):
 
   return cylinderActor
 
-def create_color_map(min_val, max_val):
+def create_color_map(min_val:float, max_val:float, scale:str):
   import vtk
   import vtk.util.numpy_support
 
   lut = vtk.vtkLookupTable()
-  lut.SetScaleToLinear()
+
+  if scale == 'log':
+    lut.SetScaleToLog10()
+    if min_val == 0:
+      if max_val <= 0:
+        min_val = 1e-7
+        max_val = 1.0
+      elif max_val > 1:
+        min_val = 1
+      else: # max_val == 1
+        min_val = 1e-3
+  else:
+    lut.SetScaleToLinear()
+
   lut.SetRange(min_val, max_val)
   
   lut.SetNumberOfColors(256)

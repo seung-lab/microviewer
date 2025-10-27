@@ -1,6 +1,13 @@
 CHANGES
 =======
 
+1.18.0
+------
+
+* feat: decompress cracklearrays
+* feat(objects): add left+ctrl click to center view
+* chore: update AUTHORS and ChangeLog
+
 1.17.1
 ------
 
