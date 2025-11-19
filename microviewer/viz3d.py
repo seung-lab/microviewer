@@ -307,13 +307,16 @@ def create_vtk_skeleton(skel, color_by, lut):
     points = vtk.vtkPoints()
     points.SetData(vtk.util.numpy_support.numpy_to_vtk(skel.vertices))
 
-    lines = vtk.vtkCellArray()
+    edges = np.asarray(skel.edges, dtype=np.int64)  # shape (M,2)
+    M = edges.shape[0]
 
-    for edge in skel.edges:
-      line = vtk.vtkLine()
-      line.GetPointIds().SetId(0, edge[0])
-      line.GetPointIds().SetId(1, edge[1])
-      lines.InsertNextCell(line)
+    # VTK "polyline" cells: [2, v0, v1] repeated
+    cells = np.empty((M, 3), dtype=np.int64)
+    cells[:,0] = 2
+    cells[:,1:] = edges
+
+    lines = vtk.vtkCellArray()
+    lines.SetCells(M, vtk.util.numpy_support.numpy_to_vtkIdTypeArray(cells.ravel(), deep=False))
   
     polyline = vtk.vtkPolyData()
     polyline.SetPoints(points)
