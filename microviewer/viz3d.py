@@ -38,6 +38,7 @@ BBOX_COLORS = [ hex2color(c) for c in BBOX_COLORS ]
 RADII_KEYWORDS = ('radius', 'radii', 'r')
 CROSS_SECTION_KEYWORDS = ('cross_section', 'x')
 COMPONENT_KEYWORDS = ('component', 'components', 'c')
+SOLID_KEYWORDS = ('s', 'solid')
 
 def toiter(obj, is_iter=False):
   if isinstance(obj, (str, dict, np.ndarray)):
@@ -93,6 +94,8 @@ def objects(
     skeleton_color_by = 'c'
   elif skeleton_color_by in CROSS_SECTION_KEYWORDS:
     skeleton_color_by = 'x'
+  elif skeleton_color_by in SOLID_KEYWORDS:
+    skeleton_color_by = 's'
   else:
     skeleton_color_by = 'c'
 
