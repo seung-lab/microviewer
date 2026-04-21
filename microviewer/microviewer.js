@@ -798,6 +798,7 @@ function render_static () {
     }
     else {
       $(channel).addClass("paintable");
+      $('#instructions .photographic').hide();
     }
 
     PARAMETERS.cloudpath[0].split('/')
@@ -1000,9 +1001,21 @@ function saveCrackle () {
 }
 
 function saveScreenshot(format) {
-  const mimeType = (format === 'webp')
-    ? 'image/webp' 
-    : 'image/png';
+  let mimeType;
+  switch (format) {
+    case 'webp':
+      mimeType = 'image/webp';
+      break;
+    case 'jpg':
+      mimeType = 'image/jpeg';
+      break;
+    case 'png':
+      mimeType = 'image/png';
+      break;
+    default:
+      console.log("Unsupported format " + format);
+      return;
+  }
 
   window.channel.toBlob((blob) => {
     const url = URL.createObjectURL(blob);
