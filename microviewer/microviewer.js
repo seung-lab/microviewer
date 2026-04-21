@@ -999,6 +999,25 @@ function saveCrackle () {
   vol.getSegmentation().saveCrackle(filename);
 }
 
+function saveScreenshot(format) {
+  const mimeType = (format === 'webp')
+    ? 'image/webp' 
+    : 'image/png';
+
+  window.channel.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+
+    let d = new Date();
+    let filename = `screenshot-${AXIS}-${SLICE[AXIS]}-${d.getFullYear()}-${d.getMonth()}-${d.getDay()}.${format}`;
+
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, mimeType);
+}
+
 function invertSelection () {
   vol.invertSelection();
   UNDO.push('select');
